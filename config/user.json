@@ -1,6 +1,6 @@
 {
-  "clientID": "ZE7994",
-  "apiKey": "hwbllidk2ztxpg7j",
-  "apiSecret": "k8o08dmg1y4o5ir5o0fo7fd3nw0ivy1d",
+  "clientID": "dummy",
+  "apiKey": "dummy",
+  "apiSecret": "dummy",
   "redirectUrl": "http://localhost:8080/apis/broker/login/zerodha"
 }
