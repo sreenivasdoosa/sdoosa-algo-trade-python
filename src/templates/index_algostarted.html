@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Algo Trading - Python</title>
+  <style>
+    .button {
+      background-color: #53a5b0;
+      border: none;
+      padding: 15px 32px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      margin: 4px 2px;
+      cursor: pointer;
+    }
+    .center {
+      text-align: center;
+    }
+  </style>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script>
+    function stopAlgo() {
+      var url =  "http://localhost:8080" + "/apis/algo/stop"
+      var data = {};
+      $.post(url, {},  
+        function(data, status, xhr) {
+          alert('status: ' + status + ', data: ' + JSON.stringify(data));
+        },
+        'json'
+      );
+    }
+  </script>
+
+</head>
+
+<body>
+  <h1 style="color: blue" class="center">Welcome to algo trading in python</h1>
+  <div class="center">
+    <!--button class="button" onClick="startAlgo()">
+      Start Algo
+    </button-->
+    <h4>Algo is running...</h4>
+  </div>
+</body>
+
+</html>
