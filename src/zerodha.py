@@ -6,13 +6,18 @@ from instruments import fetchInstruments
 import threading
 
 kite = None
+accessToken = None
 def getKite():
   return kite
+
+def getAccessToken():
+  return accessToken
 
 def loginZerodha(args):
   userConfig = getUserConfig()
   systemConfig = getSystemConfig()
   global kite
+  global accessToken
   kite = KiteConnect(api_key=userConfig['apiKey'])
   if 'request_token' in args:
     requestToken = args['request_token']

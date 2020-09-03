@@ -4,13 +4,41 @@ from instruments import fetchInstruments
 from quotes import getCMP
 from orders import placeOrder, modifyOrder, placeSLOrder, cancelOrder
 from utils import roundToNSEPrice
+from ticker import startTicker, stopTicker, registerSymbols
 import time
+import threading
 
 def startAlgo():
   logging.info("Algo started...")
   kite = getKite()
   fetchInstruments(kite)
 
+  #testOrders()
+  testTicker()
+
+def testTicker():
+  startTicker()
+  # sleep for 5 seconds and register trading symbols to receive ticks
+  time.sleep(5)
+  registerSymbols(['SBIN', 'RELIANCE'])
+
+  time.sleep(5)
+  exchange = 'NSE';
+  tradingSymbol = 'SBIN'
+  lastTradedPrice = getCMP(exchange + ':' + tradingSymbol)
+  logging.info(tradingSymbol + ' CMP = %f', lastTradedPrice)
+  qty = 1
+  direction = 'SHORT'
+
+  orderId = placeOrder(tradingSymbol, lastTradedPrice, qty, direction)
+  logging.info('placed order: order id = %s', orderId)
+
+  # wait for 120 seconds and stop ticker service
+  time.sleep(120)
+  logging.info('Going to stop ticker')
+  stopTicker()
+
+def testOrders():
   exchange = 'NSE';
   tradingSymbol = 'SBIN'
   lastTradedPrice = getCMP(exchange + ':' + tradingSymbol)
