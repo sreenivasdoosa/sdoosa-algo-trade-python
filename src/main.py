@@ -1,57 +1,25 @@
-import json
-from config import getUserConfig, getServerConfig, getSystemConfig
-from flask import Flask, render_template, request, redirect
-from zerodha import loginZerodha, getKite
-from algo import startAlgo
 import logging
-import threading
-import time
-from instruments import fetchInstruments, getInstrumentDataBySymbol
+from flask import Flask
+
+from config.Config import getBrokerAppConfig, getServerConfig, getSystemConfig
+from restapis.HomeAPI import HomeAPI
+from restapis.BrokerLoginAPI import BrokerLoginAPI
+from restapis.StartAlgoAPI import StartAlgoAPI
+from restapis.PositionsAPI import PositionsAPI
+from restapis.HoldingsAPI import HoldingsAPI
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
 
+app.add_url_rule("/", view_func=HomeAPI.as_view("home_api"))
+app.add_url_rule("/apis/broker/login/zerodha", view_func=BrokerLoginAPI.as_view("broker_login_api"))
+app.add_url_rule("/apis/algo/start", view_func=StartAlgoAPI.as_view("start_algo_api"))
+app.add_url_rule("/positions", view_func=PositionsAPI.as_view("positions_api"))
+app.add_url_rule("/holdings", view_func=HoldingsAPI.as_view("holdings_api"))
+
 def initLoggingConfg():
   format = "%(asctime)s: %(message)s"
   logging.basicConfig(format=format, level=logging.INFO, datefmt="%Y-%m-%d %H:%M:%S")
-
-@app.route('/', methods=['GET'])
-def home():
-  if 'loggedIn' in request.args and request.args['loggedIn'] == 'true':
-    return render_template('index_loggedin.html')
-  elif 'algoStarted' in request.args and request.args['algoStarted'] == 'true':
-    return render_template('index_algostarted.html')
-  else:
-    return render_template('index.html')
-  
-@app.route('/apis/broker/login/zerodha', methods=['GET'])
-def login_broker():
-  return loginZerodha(request.args)
-
-@app.route('/apis/algo/start', methods=['POST'])
-def start_algo():
-  x = threading.Thread(target=startAlgo)
-  x.start()
-  systemConfig = getSystemConfig()
-  homeUrl = systemConfig['homeUrl'] + '?algoStarted=true'
-  logging.info('Sending redirect url %s in response', homeUrl)
-  respData = { 'redirect': homeUrl }
-  return json.dumps(respData)
-
-@app.route('/positions', methods=['GET'])
-def positions():
-  kite = getKite()
-  positions = kite.positions()
-  print('getKite positions => ', positions)
-  return json.dumps(positions)
-
-@app.route('/holdings', methods=['GET'])
-def holdings():
-  kite = getKite()
-  holdings = kite.holdings()
-  print('getKite holdings => ', holdings)
-  return json.dumps(holdings)
-
 
 # Execution starts here
 initLoggingConfg()
@@ -59,8 +27,8 @@ initLoggingConfg()
 serverConfig = getServerConfig()
 logging.info('serverConfig => %s', serverConfig)
 
-userConfig = getUserConfig()
-logging.info('userConfig => %s', userConfig)
+brokerAppConfig = getBrokerAppConfig()
+logging.info('brokerAppConfig => %s', brokerAppConfig)
 
 port = serverConfig['port'] 
 

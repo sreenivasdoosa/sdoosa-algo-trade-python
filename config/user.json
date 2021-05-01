@@ -1,6 +1,0 @@
-{
-  "clientID": "dummy",
-  "apiKey": "dummy",
-  "apiSecret": "dummy",
-  "redirectUrl": "http://localhost:8080/apis/broker/login/zerodha"
-}

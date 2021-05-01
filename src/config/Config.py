@@ -10,8 +10,8 @@ def getSystemConfig():
     jsonSystemData = json.load(system)
     return jsonSystemData
 
-def getUserConfig():
-  with open('../config/user.json', 'r') as user:
-    jsonUserData = json.load(user)
+def getBrokerAppConfig():
+  with open('../config/brokerapp.json', 'r') as brokerapp:
+    jsonUserData = json.load(brokerapp)
     return jsonUserData
     
