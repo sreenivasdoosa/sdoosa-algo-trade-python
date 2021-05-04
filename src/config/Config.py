@@ -14,4 +14,9 @@ def getBrokerAppConfig():
   with open('../config/brokerapp.json', 'r') as brokerapp:
     jsonUserData = json.load(brokerapp)
     return jsonUserData
+
+def getHolidays():
+  with open('../config/holidays.json', 'r') as holidays:
+    holidaysData = json.load(holidays)
+    return holidaysData
     

@@ -6,6 +6,7 @@ from loginmgmt.ZerodhaLogin import ZerodhaLogin
 
 class Controller:
   brokerLogin = None # static variable
+  brokerName = None # static variable
 
   def handleBrokerLogin(args):
     brokerAppConfig = getBrokerAppConfig()
@@ -16,11 +17,11 @@ class Controller:
     brokerAppDetails.setAppSecret(brokerAppConfig['appSecret'])
 
     logging.info('handleBrokerLogin appKey %s', brokerAppDetails.appKey)
-
-    if brokerAppDetails.broker == 'zerodha':
+    Controller.brokerName = brokerAppDetails.broker
+    if Controller.brokerName == 'zerodha':
       Controller.brokerLogin = ZerodhaLogin(brokerAppDetails)
     # Other brokers - not implemented
-    #elif brokerAppDetails.broker == 'fyers':
+    #elif Controller.brokerName == 'fyers':
       #Controller.brokerLogin = FyersLogin(brokerAppDetails)
 
     redirectUrl = Controller.brokerLogin.login(args)
@@ -28,3 +29,6 @@ class Controller:
 
   def getBrokerLogin():
     return Controller.brokerLogin
+
+  def getBrokerName():
+    return Controller.brokerName
