@@ -2,15 +2,17 @@ import logging
 from datetime import datetime
 
 from trademgmt.TradeState import TradeState
+from models.ProductType import ProductType
+
 from utils.Utils import Utils
 
 class Trade:
   def __init__(self, tradingSymbol):
     self.tradeID = Utils.generateTradeID() # Unique ID for each trade
     self.tradingSymbol = tradingSymbol
-    self.strategy = None
-    self.direction = None
-    self.productType = "MIS"
+    self.strategy = ""
+    self.direction = ""
+    self.productType = ProductType.MIS
     self.isFutures = False # Futures trade
     self.isOptions = False # Options trade
     self.optionType = None # CE/PE. Applicable only if isOptions is True
@@ -27,6 +29,7 @@ class Trade:
     self.cmp = 0 # Last traded price
 
     self.tradeState = TradeState.CREATED # state of the trade
+    self.timestamp = None # Set this timestamp to strategy timestamp if you are not sure what to set
     self.createTimestamp = datetime.now() # Timestamp when the trade is created (Not triggered)
     self.startTimestamp = None # Timestamp when the trade gets triggered and order placed
     self.endTimestamp = None # Timestamp when the trade ended
@@ -40,10 +43,31 @@ class Trade:
     self.slOrder = None # Object of Type ordermgmt.Order
     self.targetOrder = None # Object of Type ordermgmt.Order
 
-  def printTrade(self):
-    logging.info('ID=%s, state=%s, symbol=%s, strategy=%s, direction=%s'
-        + ', productType=%s, reqEntry=%f, stopLoss=%f, target=%f'
-        + ', entry=%f, exit=%f',
-        self.tradeID, self.tradeState, self.tradingSymbol, self.strategy, self.direction,
-        self.productType, self.requestedEntry, self.stopLoss, self.target,
-        self.entry, self.exit)
+  def equals(self, trade): # compares to trade objects and returns True if equals
+    if trade == None:
+      return False
+    if self.tradeID == trade.tradeID:
+      return True
+    if self.tradingSymbol != trade.tradingSymbol:
+      return False
+    if self.strategy != trade.strategy:
+      return False  
+    if self.direction != trade.direction:
+      return False
+    if self.productType != trade.productType:
+      return False
+    if self.requestedEntry != trade.requestedEntry:
+      return False
+    if self.qty != trade.qty:
+      return False
+    if self.timestamp != trade.timestamp:
+      return False
+    return True
+
+  def __str__(self):
+    return "ID=" + str(self.tradeID) + ", state=" + self.tradeState + ", symbol=" + self.tradingSymbol \
+      + ", strategy=" + self.strategy + ", direction=" + self.direction \
+      + ", productType=" + self.productType + ", reqEntry=" + str(self.requestedEntry) \
+      + ", stopLoss=" + str(self.stopLoss) + ", target=" + str(self.target) \
+      + ", entry=" + str(self.entry) + ", exit=" + str(self.exit)
+

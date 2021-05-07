@@ -2,7 +2,9 @@ import logging
 import time
 from datetime import datetime
 
+from models.ProductType import ProductType
 from core.Quotes import Quotes
+from trademgmt.TradeManager import TradeManager
 
 from utils.Utils import Utils
 
@@ -11,7 +13,7 @@ class BaseStrategy:
     # NOTE: All the below properties should be set by the Derived Class (Specific to each strategy)
     self.name = name # strategy name
     self.enabled = True # Strategy will be run only when it is enabled
-    self.productType = "MIS" # MIS/NRML/CNC etc
+    self.productType = ProductType.MIS # MIS/NRML/CNC etc
     self.symbols = [] # List of stocks to be traded under this strategy
     self.slPercentage = 0
     self.targetPerncetage = 0
@@ -24,7 +26,8 @@ class BaseStrategy:
     self.isFnO = False # Does this strategy trade in FnO or not
     self.capitalPerSet = 0 # Applicable if isFnO is True (Set means 1CE/1PE or 2CE/2PE etc based on your strategy logic)
     self.tradesCreatedSymbols = [] # Add symbol to this list when a trade is created
-
+    # Register strategy with trade manager
+    TradeManager.registerStrategy(self)
 
   def getName(self):
     return self.name
@@ -84,6 +87,19 @@ class BaseStrategy:
       now = datetime.now()
       waitSeconds = 30 - (now.second % 30) 
       time.sleep(waitSeconds)
+
+  def shouldPlaceTrade(self, trade, tick):
+    # Each strategy should call this function from its own shouldPlaceTrade() method before working on its own logic
+    if trade == None:
+      return False
+    if trade.qty == 0:
+      return False
+    numOfTradesPlaced = TradeManager.getNumberOfTradesPlacedByStrategy(self.getName())
+    if numOfTradesPlaced >= self.maxTradesPerDay:
+      TradeManager.disableTrade(trade, 'MaxTradesPerDayReached')
+      return False
+
+    return True
 
   def getQuote(self, tradingSymbol):
     return Quotes.getQuote(tradingSymbol)

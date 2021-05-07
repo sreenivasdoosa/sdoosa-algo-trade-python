@@ -3,6 +3,8 @@
 class BrokerAppDetails:
   def __init__(self, broker):
     self.broker = broker
+    self.appKey = None
+    self.appSecret = None
 
   def setClientID(self, clientID):
     self.clientID = clientID

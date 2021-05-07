@@ -6,14 +6,26 @@ class BaseOrderManager:
     self.broker = broker
     self.brokerHandle = Controller.getBrokerLogin().getBrokerHandle()
 
-  def placeOrder(self, tradingSymbol, price, qty, direction):
+  def placeOrder(self, orderInputParams):
     pass
 
-  def modifyOrder(self, orderId, newPrice = 0, newQty = 0):
+  def modifyOrder(self, order, orderModifyParams):
     pass
 
-  def placeSLOrder(self, tradingSymbol, triggerPrice, qty, direction):
+  def modifyOrderToMarket(self, order):
     pass
 
-  def cancelOrder(self, orderId):
+  def cancelOrder(self, order):
     pass
+
+  def fetchAndUpdateAllOrderDetails(self, orders):
+    pass
+
+  def convertToBrokerProductType(self, productType):
+    return productType
+
+  def convertToBrokerOrderType(self, orderType):
+    return orderType
+
+  def convertToBrokerDirection(self, direction):
+    return direction
