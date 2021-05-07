@@ -9,7 +9,7 @@ from models.TickData import TickData
 
 class ZerodhaTicker(BaseTicker):
   def __init__(self):
-    BaseTicker.__init__(self)
+    super().__init__("zerodha")
 
   def startTicker(self):
     brokerAppDetails = self.brokerLogin.getBrokerAppDetails()

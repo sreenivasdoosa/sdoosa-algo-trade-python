@@ -96,5 +96,5 @@ class Utils:
 
   @staticmethod
   def generateTradeID():
-    return uuid.uuid4()
+    return str(uuid.uuid4())
 

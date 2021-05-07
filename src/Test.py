@@ -4,6 +4,7 @@ import time
 from core.Controller import Controller
 from ticker.ZerodhaTicker import ZerodhaTicker
 from ordermgmt.ZerodhaOrderManager import ZerodhaOrderManager
+from ordermgmt.Order import Order
 from core.Quotes import Quotes
 from utils.Utils import Utils
 
@@ -70,3 +71,11 @@ class Test:
         logging.info('Cancelled Target order Id %s', targetOrderId)
 
     logging.info("Algo done executing all orders. Check ur orders and positions in broker terminal.") 
+
+  def testMisc():
+    orderManager = ZerodhaOrderManager()
+    sampleOrder = Order(orderInputParams=None)
+    sampleOrder.orderId='210505200078243'
+    orders = []
+    orders.append(sampleOrder)
+    orderManager.fetchAndUpdateAllOrderDetails(orders)

@@ -3,7 +3,8 @@ import logging
 from core.Controller import Controller
 
 class BaseTicker:
-  def __init__(self):
+  def __init__(self, broker):
+    self.broker = broker
     self.brokerLogin = Controller.getBrokerLogin()
     self.ticker = None
     self.tickListeners = []
@@ -28,7 +29,10 @@ class BaseTicker:
     # logging.info('New ticks received %s', ticks)
     for tick in ticks:
       for listener in self.tickListeners:
-        listener(tick)
+        try:
+          listener(tick)
+        except Exception as e:
+          logging.error('BaseTicker: Exception from listener callback function. Error => %s', str(e))
 
   def onConnect(self):
     logging.info('Ticker connection successful.')
