@@ -1,5 +1,5 @@
 
-class OrderInputParams:
+class OrderModifyParams:
   def __init__(self):
     self.newPrice = 0
     self.newTriggerPrice = 0 # Applicable in case of SL order
