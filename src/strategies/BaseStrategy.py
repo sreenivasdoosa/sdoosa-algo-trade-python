@@ -19,7 +19,7 @@ class BaseStrategy:
     self.targetPerncetage = 0
     self.startTimestamp = Utils.getMarketStartTime() # When to start the strategy. Default is Market start time
     self.stopTimestamp = None # This is not square off timestamp. This is the timestamp after which no new trades will be placed under this strategy but existing trades continue to be active.
-    self.squareOfTimestamp = None # Square off time
+    self.squareOffTimestamp = None # Square off time
     self.capital = 10000 # Capital to trade (This is the margin you allocate from your broker account for this strategy)
     self.leverage = 1 # 2x, 3x Etc
     self.maxTradesPerDay = 1 # Max number of trades per day under this strategy

@@ -302,6 +302,7 @@ class TradeManager:
     trade.tradeState = TradeState.COMPLETED
     trade.exit = exit
     trade.exitReason = exitReason if trade.exitReason == None else trade.exitReason
+    trade.endTimestamp = datetime.now()
     trade = Utils.calculateTradePnl(trade)
     logging.info('TradeManager: setTradeToCompleted strategy = %s, symbol = %s, qty = %d, entry = %f, exit = %f, pnl = %f, exit reason = %s', trade.strategy, trade.tradingSymbol, trade.filledQty, trade.entry, trade.exit, trade.pnl, trade.exitReason)
 
