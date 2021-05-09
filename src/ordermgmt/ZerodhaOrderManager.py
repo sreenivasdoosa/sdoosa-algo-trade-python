@@ -57,8 +57,8 @@ class ZerodhaOrderManager(BaseOrderManager):
       logging.info('%s Order modify failed: %s', self.broker, str(e))
       raise Exception(str(e))
 
-  def modifyOrderToMarket(self, order, orderModifyParams):
-    logging.info('%s: Going to modify order with params %s', self.broker, orderModifyParams)
+  def modifyOrderToMarket(self, order):
+    logging.info('%s: Going to modify order with params %s', self.broker)
     kite = self.brokerHandle
     try:
       orderId = kite.modify_order(

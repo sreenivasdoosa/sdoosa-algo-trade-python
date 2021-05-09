@@ -6,6 +6,7 @@ import calendar
 from datetime import datetime
 
 from config.Config import getHolidays
+from models.Direction import Direction
 
 class Utils:
   dateFormat = "%Y-%m-%d"
@@ -98,3 +99,22 @@ class Utils:
   def generateTradeID():
     return str(uuid.uuid4())
 
+  @staticmethod
+  def calculateTradePnl(trade):
+    if trade.tradeState == TradeState.ACTIVE:
+      if trade.cmp > 0:
+        if trade.direction == Direction.LONG:
+          trade.pnl = Utils.roundOff(trade.filledQty * (trade.cmp - trade.entry))
+        else:  
+          trade.pnl = Utils.roundOff(trade.filledQty * (trade.entry - trade.cmp))
+    else:
+      if trade.exit > 0:
+        if trade.direction == Direction.LONG:
+          trade.pnl = Utils.roundOff(trade.filledQty * (trade.exit - trade.entry))
+        else:  
+          trade.pnl = Utils.roundOff(trade.filledQty * (trade.entry - trade.exit))
+    tradeValue = trade.entry * trade.filledQty
+    if tradeValue > 0:
+      trade.pnlPercentage = Utils.roundOff(trade.pnl * 100 / tradeValue)
+    return trade
+    

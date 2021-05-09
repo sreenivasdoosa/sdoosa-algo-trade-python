@@ -93,7 +93,14 @@ class BaseStrategy:
     if trade == None:
       return False
     if trade.qty == 0:
+      TradeManager.disableTrade(trade, 'InvalidQuantity')
       return False
+
+    now = datetime.now()
+    if now > self.stopTimestamp:
+      TradeManager.disableTrade(trade, 'NoNewTradesCutOffTimeReached')
+      return False
+
     numOfTradesPlaced = TradeManager.getNumberOfTradesPlacedByStrategy(self.getName())
     if numOfTradesPlaced >= self.maxTradesPerDay:
       TradeManager.disableTrade(trade, 'MaxTradesPerDayReached')
