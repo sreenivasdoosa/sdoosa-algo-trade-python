@@ -1,13 +1,19 @@
+import os
 import logging
 import time
+import json
 from datetime import datetime
 
+from config.Config import getServerConfig
 from core.Controller import Controller
 from ticker.ZerodhaTicker import ZerodhaTicker
+from trademgmt.Trade import Trade
 from trademgmt.TradeState import TradeState
 from trademgmt.TradeExitReason import TradeExitReason
+from trademgmt.TradeEncoder import TradeEncoder
 from ordermgmt.ZerodhaOrderManager import ZerodhaOrderManager
 from ordermgmt.OrderInputParams import OrderInputParams
+from ordermgmt.Order import Order
 from models.OrderType import OrderType
 from models.OrderStatus import OrderStatus
 from models.Direction import Direction
@@ -19,6 +25,8 @@ class TradeManager:
   trades = [] # to store all the trades
   strategyToInstanceMap = {}
   symbolToCMPMap = {}
+  intradayTradesDir = None
+  registeredSymbols = []
 
   @staticmethod
   def run():
@@ -32,6 +40,14 @@ class TradeManager:
 
     Utils.waitTillMarketOpens("TradeManager")
 
+    # check and create trades directory for today`s date
+    serverConfig = getServerConfig()
+    tradesDir = serverConfig['tradesDir']
+    TradeManager.intradayTradesDir =  os.path.join(tradesDir, Utils.getTodayDateStr())
+    if os.path.exists(TradeManager.intradayTradesDir) == False:
+      logging.info('TradeManager: Intraday Trades Directory %s does not exist. Hence going to create.', TradeManager.intradayTradesDir)
+      os.mkdir(TradeManager.intradayTradesDir)
+
     # start ticker service
     brokerName = Controller.getBrokerName()
     if brokerName == "zerodha":
@@ -42,23 +58,63 @@ class TradeManager:
     TradeManager.ticker.startTicker()
     TradeManager.ticker.registerListener(TradeManager.tickerListener)
 
+    # sleep for 2 seconds for ticker connection establishment
+    time.sleep(2)
+
+    # Load all trades from json files to app memory
+    TradeManager.loadAllTradesFromFile()
+
     # track and update trades in a loop
     while True:
       if Utils.isMarketClosedForTheDay():
         logging.info('TradeManager: Stopping TradeManager as market closed.')
         break
 
-      # Fetch all order details from broker and update orders in each trade
-      TradeManager.fetchAndUpdateAllTradeOrders()
+      try:
+        # Fetch all order details from broker and update orders in each trade
+        TradeManager.fetchAndUpdateAllTradeOrders()
 
-      # track each trade and take necessary action
-      TradeManager.trackAndUpdateAllTrades()
+        # track each trade and take necessary action
+        TradeManager.trackAndUpdateAllTrades()
 
-      time.sleep(60 * 1000) # sleep for 60 seconds
+        # save updated data to json file
+        TradeManager.saveAllTradesToFile()
+      except Exception as e:
+        logging.exception("Exception in TradeManager Main thread")
+
+      # sleep for 60 seconds and then continue
+      time.sleep(60)
+      logging.info('TradeManager: Main thread woke up..')
 
   @staticmethod
   def registerStrategy(strategyInstance):
     TradeManager.strategyToInstanceMap[strategyInstance.getName()] = strategyInstance
+
+  @staticmethod
+  def loadAllTradesFromFile():
+    tradesFilepath = os.path.join(TradeManager.intradayTradesDir, 'trades.json')
+    if os.path.exists(tradesFilepath) == False:
+      logging.warn('TradeManager: loadAllTradesFromFile() Trades Filepath %s does not exist', tradesFilepath)
+      return
+    TradeManager.trades = []
+    tFile = open(tradesFilepath, 'r')
+    tradesData = json.loads(tFile.read())
+    for tr in tradesData:
+      trade = TradeManager.convertJSONToTrade(tr)
+      logging.info('loadAllTradesFromFile trade => %s', trade)
+      TradeManager.trades.append(trade)
+      if trade.tradingSymbol not in TradeManager.registeredSymbols:
+        # Algo register symbols with ticker
+        TradeManager.ticker.registerSymbols([trade.tradingSymbol])
+        TradeManager.registeredSymbols.append(trade.tradingSymbol)
+    logging.info('TradeManager: Successfully loaded %d trades from json file %s', len(TradeManager.trades), tradesFilepath)
+
+  @staticmethod
+  def saveAllTradesToFile():
+    tradesFilepath = os.path.join(TradeManager.intradayTradesDir, 'trades.json')
+    with open(tradesFilepath, 'w') as tFile:
+      json.dump(TradeManager.trades, tFile, indent=2, cls=TradeEncoder)
+    logging.info('TradeManager: Saved %d trades to file %s', len(TradeManager.trades), tradesFilepath)
 
   @staticmethod
   def addNewTrade(trade):
@@ -73,7 +129,9 @@ class TradeManager:
     TradeManager.trades.append(trade)
     logging.info('TradeManager: trade %s added successfully to the list', trade.tradeID)
     # Register the symbol with ticker so that we will start getting ticks for this symbol
-    TradeManager.ticker.registerSymbols([trade.tradingSymbol])
+    if trade.tradingSymbol not in TradeManager.registeredSymbols:
+      TradeManager.ticker.registerSymbols([trade.tradingSymbol])
+      TradeManager.registeredSymbols.append(trade.tradingSymbol)
 
   @staticmethod
   def disableTrade(trade, reason):
@@ -83,7 +141,7 @@ class TradeManager:
 
   @staticmethod
   def tickerListener(tick):
-    logging.info('tickerLister: new tick received for %s = %f', tick.tradingSymbol, tick.lastTradedPrice);
+    # logging.info('tickerLister: new tick received for %s = %f', tick.tradingSymbol, tick.lastTradedPrice);
     TradeManager.symbolToCMPMap[tick.tradingSymbol] = tick.lastTradedPrice # Store the latest tick in map
     # On each new tick, get a created trade and call its strategy whether to place trade or not
     for strategy in TradeManager.strategyToInstanceMap:
@@ -97,7 +155,7 @@ class TradeManager:
         if isSuccess == True:
           # set trade state to ACTIVE
           trade.tradeState = TradeState.ACTIVE
-          trade.startTimestamp = datetime.now()
+          trade.startTimestamp = Utils.getEpoch()
   
   @staticmethod
   def getUntriggeredTrade(tradingSymbol, strategy):
@@ -132,7 +190,7 @@ class TradeManager:
       logging.exrror('TradeManager: Execute trade failed for tradeID %s: Error => %s', trade.tradeID, str(e))
       return False
 
-    logging.info('TradeManager: Execute trade successful for %s', trade)
+    logging.info('TradeManager: Execute trade successful for %s and entryOrder %s', trade, trade.entryOrder)
     return True
 
   @staticmethod
@@ -153,13 +211,13 @@ class TradeManager:
     for trade in TradeManager.trades:
       if trade.tradeState == TradeState.ACTIVE:
         if trade.intradaySquareOffTimestamp != None:
-          now = datetime.now()
-          if now >= trade.intradaySquareOffTimestamp:
+          nowEpoch = Utils.getEpoch()
+          if nowEpoch >= trade.intradaySquareOffTimestamp:
             TradeManager.squareOffTrade(trade, TradeExitReason.SQUARE_OFF)
-        else:
-          TradeManager.trackEntryOrder(trade)
-          TradeManager.trackSLOrder(trade)
-          TradeManager.trackTargetOrder(trade)
+        
+        TradeManager.trackEntryOrder(trade)
+        TradeManager.trackSLOrder(trade)
+        TradeManager.trackTargetOrder(trade)
 
   @staticmethod
   def trackEntryOrder(trade):
@@ -302,7 +360,7 @@ class TradeManager:
     trade.tradeState = TradeState.COMPLETED
     trade.exit = exit
     trade.exitReason = exitReason if trade.exitReason == None else trade.exitReason
-    trade.endTimestamp = datetime.now()
+    trade.endTimestamp = Utils.getEpoch()
     trade = Utils.calculateTradePnl(trade)
     logging.info('TradeManager: setTradeToCompleted strategy = %s, symbol = %s, qty = %d, entry = %f, exit = %f, pnl = %f, exit reason = %s', trade.strategy, trade.tradingSymbol, trade.filledQty, trade.entry, trade.exit, trade.pnl, trade.exitReason)
 
@@ -350,3 +408,60 @@ class TradeManager:
       # consider active/completed/cancelled trades as trades placed
       count += 1
     return count
+
+  @staticmethod
+  def convertJSONToTrade(jsonData):
+    trade = Trade(jsonData['tradingSymbol'])
+    trade.tradeID = jsonData['tradeID']
+    trade.direction = jsonData['direction']
+    trade.productType = jsonData['productType']
+    trade.isFutures = jsonData['isFutures']
+    trade.isOptions = jsonData['isOptions']
+    trade.optionType = jsonData['optionType']
+    trade.placeMarketOrder = jsonData['placeMarketOrder']
+    trade.intradaySquareOffTimestamp = jsonData['intradaySquareOffTimestamp']
+    trade.requestedEntry = jsonData['requestedEntry']
+    trade.entry = jsonData['entry']
+    trade.qty = jsonData['qty']
+    trade.filledQty = jsonData['filledQty']
+    trade.initialStopLoss = jsonData['initialStopLoss']
+    trade.stopLoss = jsonData['stopLoss']
+    trade.target = jsonData['target']
+    trade.cmp = jsonData['cmp']
+    trade.tradeState = jsonData['tradeState']
+    trade.timestamp = jsonData['timestamp']
+    trade.createTimestamp = jsonData['createTimestamp']
+    trade.startTimestamp = jsonData['startTimestamp']
+    trade.endTimestamp = jsonData['endTimestamp']
+    trade.pnl = jsonData['pnl']
+    trade.pnlPercentage = jsonData['pnlPercentage']
+    trade.exit = jsonData['exit']
+    trade.exitReason = jsonData['exitReason']
+    trade.exchange = jsonData['exchange']
+    trade.entryOrder = TradeManager.convertJSONToOrder(jsonData['entryOrder'])
+    trade.slOrder = TradeManager.convertJSONToOrder(jsonData['slOrder'])
+    trade.targetOrder = TradeManager.convertJSONToOrder(jsonData['targetOrder'])
+    return trade
+
+  @staticmethod
+  def convertJSONToOrder(jsonData):
+    if jsonData == None:
+      return None
+    order = Order()
+    order.tradingSymbol = jsonData['tradingSymbol']
+    order.exchange = jsonData['exchange']
+    order.productType = jsonData['productType']
+    order.orderType = jsonData['orderType']
+    order.price = jsonData['price']
+    order.triggerPrice = jsonData['triggerPrice']
+    order.qty = jsonData['qty']
+    order.orderId = jsonData['orderId']
+    order.orderStatus = jsonData['orderStatus']
+    order.averagePrice = jsonData['averagePrice']
+    order.filledQty = jsonData['filledQty']
+    order.pendingQty = jsonData['pendingQty']
+    order.orderPlaceTimestamp = jsonData['orderPlaceTimestamp']
+    order.lastOrderUpdateTimestamp = jsonData['lastOrderUpdateTimestamp']
+    order.message = jsonData['message']
+    return order
+

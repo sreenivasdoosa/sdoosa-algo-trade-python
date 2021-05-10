@@ -50,4 +50,5 @@ class BaseTicker:
     logging.error('Ticker max auto reconnects attempted and giving up..')
 
   def onOrderUpdate(self, data):
-    logging.info('Ticker: order update %s', data)
+    #logging.info('Ticker: order update %s', data)
+    pass

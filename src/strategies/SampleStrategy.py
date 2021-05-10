@@ -30,7 +30,7 @@ class SampleStrategy(BaseStrategy):
     self.slPercentage = 1.1
     self.targetPerncetage = 2.2
     self.startTimestamp = Utils.getTimeOfToDay(9, 30, 0) # When to start the strategy. Default is Market start time
-    self.stopTimestamp = Utils.getTimeOfToDay(12, 30, 0) # This is not square off timestamp. This is the timestamp after which no new trades will be placed under this strategy but existing trades continue to be active.
+    self.stopTimestamp = Utils.getTimeOfToDay(14, 30, 0) # This is not square off timestamp. This is the timestamp after which no new trades will be placed under this strategy but existing trades continue to be active.
     self.squareOffTimestamp = Utils.getTimeOfToDay(15, 0, 0) # Square off time
     self.capital = 3000 # Capital to trade (This is the margin you allocate from your broker account for this strategy)
     self.leverage = 2 # 2x, 3x Etc
@@ -74,7 +74,7 @@ class SampleStrategy(BaseStrategy):
     trade.productType = self.productType
     trade.placeMarketOrder = True
     trade.requestedEntry = breakoutPrice
-    trade.timestamp = self.startTimestamp # setting this to strategy timestamp
+    trade.timestamp = Utils.getEpoch(self.startTimestamp) # setting this to strategy timestamp
     trade.qty = int(self.calculateCapitalPerTrade() / breakoutPrice)
     if trade.qty == 0:
       trade.qty = 1 # Keep min 1 qty
@@ -88,7 +88,7 @@ class SampleStrategy(BaseStrategy):
     else:
       trade.target = Utils.roundToNSEPrice(breakoutPrice - breakoutPrice * self.targetPerncetage / 100)
 
-    trade.intradaySquareOffTimestamp = self.squareOffTimestamp
+    trade.intradaySquareOffTimestamp = Utils.getEpoch(self.squareOffTimestamp)
     # Hand over the trade to TradeManager
     TradeManager.addNewTrade(trade)
 

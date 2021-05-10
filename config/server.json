@@ -1,5 +1,7 @@
 {
   "port": 8080,
   "enableSSL": false,
-  "sslPort": 8443
+  "sslPort": 8443,
+  "logFileDir": "D:/temp/python-deploy/logs",
+  "tradesDir": "D:/temp/python-deploy/trades"
 }
