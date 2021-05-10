@@ -1,7 +1,5 @@
 
-from json import JSONEncoder
-
-class Order(JSONEncoder):
+class Order():
   def __init__(self, orderInputParams = None):
     self.tradingSymbol = orderInputParams.tradingSymbol if orderInputParams != None else ""
     self.exchange = orderInputParams.exchange if orderInputParams != None else "NSE"
@@ -26,6 +24,3 @@ class Order(JSONEncoder):
       + ", triggerPrice=" + str(self.triggerPrice) + ", qty=" + str(self.qty) \
       + ", filledQty=" + str(self.filledQty) + ", pendingQty=" + str(self.pendingQty) \
       + ", averagePrice=" + str(self.averagePrice)
-
-  def default(self, o):
-    return JSONEncoder.default(self, o)
