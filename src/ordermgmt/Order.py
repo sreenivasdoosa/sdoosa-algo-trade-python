@@ -1,5 +1,5 @@
 
-class Order():
+class Order:
   def __init__(self, orderInputParams = None):
     self.tradingSymbol = orderInputParams.tradingSymbol if orderInputParams != None else ""
     self.exchange = orderInputParams.exchange if orderInputParams != None else "NSE"
