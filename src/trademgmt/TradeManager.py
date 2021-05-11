@@ -382,7 +382,7 @@ class TradeManager:
     if trade.targetOrder != None:
       # Change target order type to MARKET to exit position immediately
       logging.info('TradeManager: changing target order %s to MARKET to exit position for tradeID %s', trade.targetOrder.orderId, trade.tradeID)
-      TradeManager.getOrderManager.modifyOrderToMarket(trade.targetOrder)
+      TradeManager.getOrderManager().modifyOrderToMarket(trade.targetOrder)
     else:
       # Place new target order to exit position
       logging.info('TradeManager: placing new target order to exit position for tradeID %s', trade.tradeID)
