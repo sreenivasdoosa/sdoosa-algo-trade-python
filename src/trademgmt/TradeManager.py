@@ -82,8 +82,8 @@ class TradeManager:
       except Exception as e:
         logging.exception("Exception in TradeManager Main thread")
 
-      # sleep for 60 seconds and then continue
-      time.sleep(60)
+      # sleep for 30 seconds and then continue
+      time.sleep(30)
       logging.info('TradeManager: Main thread woke up..')
 
   @staticmethod
@@ -290,7 +290,7 @@ class TradeManager:
   @staticmethod
   def placeSLOrder(trade):
     oip = OrderInputParams(trade.tradingSymbol)
-    oip.direction = Direction.SHORT if trade.direction == Direction.LONG else Direction.SHORT 
+    oip.direction = Direction.SHORT if trade.direction == Direction.LONG else Direction.LONG 
     oip.productType = trade.productType
     oip.orderType = OrderType.SL_MARKET
     oip.triggerPrice = trade.stopLoss
@@ -298,7 +298,7 @@ class TradeManager:
     try:
       trade.slOrder = TradeManager.getOrderManager().placeOrder(oip)
     except Exception as e:
-      logging.exrror('TradeManager: Failed to place SL order for tradeID %s: Error => %s', trade.tradeID, str(e))
+      logging.error('TradeManager: Failed to place SL order for tradeID %s: Error => %s', trade.tradeID, str(e))
       return False
     logging.info('TradeManager: Successfully placed SL order %s for tradeID %s', trade.slOrder.orderId, trade.tradeID)
     return True
@@ -306,7 +306,7 @@ class TradeManager:
   @staticmethod
   def placeTargetOrder(trade, isMarketOrder = False):
     oip = OrderInputParams(trade.tradingSymbol)
-    oip.direction = Direction.SHORT if trade.direction == Direction.LONG else Direction.SHORT 
+    oip.direction = Direction.SHORT if trade.direction == Direction.LONG else Direction.LONG
     oip.productType = trade.productType
     oip.orderType = OrderType.MARKET if isMarketOrder == True else OrderType.LIMIT
     oip.price = 0 if isMarketOrder == True else trade.target

@@ -64,10 +64,10 @@ class SampleStrategy(BaseStrategy):
         continue
 
       if symbol not in self.tradesCreatedSymbols:
-        self.generateTrade(symbol, direction, breakoutPrice)
+        self.generateTrade(symbol, direction, breakoutPrice, cmp)
 
 
-  def generateTrade(self, tradingSymbol, direction, breakoutPrice):
+  def generateTrade(self, tradingSymbol, direction, breakoutPrice, cmp):
     trade = Trade(tradingSymbol)
     trade.strategy = self.getName()
     trade.direction = direction
@@ -80,8 +80,12 @@ class SampleStrategy(BaseStrategy):
       trade.qty = 1 # Keep min 1 qty
     if direction == 'LONG':
       trade.stopLoss = Utils.roundToNSEPrice(breakoutPrice - breakoutPrice * self.slPercentage / 100)
+      if cmp < trade.stopLoss:
+        trade.stopLoss = Utils.roundToNSEPrice(cmp - cmp * 1 / 100)
     else:
       trade.stopLoss = Utils.roundToNSEPrice(breakoutPrice + breakoutPrice * self.slPercentage / 100)
+      if cmp > trade.stopLoss:
+        trade.stopLoss = Utils.roundToNSEPrice(cmp + cmp * 1 / 100)
 
     if direction == 'LONG':
       trade.target = Utils.roundToNSEPrice(breakoutPrice + breakoutPrice * self.targetPerncetage / 100)
