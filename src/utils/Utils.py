@@ -6,16 +6,13 @@ import calendar
 from datetime import datetime
 
 from config.Config import getHolidays
+from models.Direction import Direction
+from trademgmt.TradeState import TradeState
 
 class Utils:
   dateFormat = "%Y-%m-%d"
   timeFormat = "%H:%M:%S"
   dateTimeFormat = "%Y-%m-%d %H:%M:%S"
-
-  @staticmethod
-  def initLoggingConfig():
-    format = "%(asctime)s: %(message)s"
-    logging.basicConfig(format=format, level=logging.INFO, datefmt="%Y-%m-%d %H:%M:%S")
 
   @staticmethod
   def roundOff(price): # Round off to 2 decimal places
@@ -56,8 +53,10 @@ class Utils:
       time.sleep(waitSeconds)
 
   @staticmethod
-  def getEpoch(datetimeObj):
+  def getEpoch(datetimeObj = None):
     # This method converts given datetimeObj to epoch seconds
+    if datetimeObj == None:
+      datetimeObj = datetime.now()
     epochSeconds = datetime.timestamp(datetimeObj)
     return int(epochSeconds) # converting double to long
 
@@ -98,3 +97,21 @@ class Utils:
   def generateTradeID():
     return str(uuid.uuid4())
 
+  @staticmethod
+  def calculateTradePnl(trade):
+    if trade.tradeState == TradeState.ACTIVE:
+      if trade.cmp > 0:
+        if trade.direction == Direction.LONG:
+          trade.pnl = Utils.roundOff(trade.filledQty * (trade.cmp - trade.entry))
+        else:  
+          trade.pnl = Utils.roundOff(trade.filledQty * (trade.entry - trade.cmp))
+    else:
+      if trade.exit > 0:
+        if trade.direction == Direction.LONG:
+          trade.pnl = Utils.roundOff(trade.filledQty * (trade.exit - trade.entry))
+        else:  
+          trade.pnl = Utils.roundOff(trade.filledQty * (trade.entry - trade.exit))
+    tradeValue = trade.entry * trade.filledQty
+    if tradeValue > 0:
+      trade.pnlPercentage = Utils.roundOff(trade.pnl * 100 / tradeValue)
+    return trade

@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 
 from ordermgmt.BaseOrderManager import BaseOrderManager
 from ordermgmt.Order import Order
@@ -8,6 +7,8 @@ from models.ProductType import ProductType
 from models.OrderType import OrderType
 from models.Direction import Direction
 from models.OrderStatus import OrderStatus
+
+from utils.Utils import Utils
 
 class ZerodhaOrderManager(BaseOrderManager):
   def __init__(self):
@@ -31,9 +32,9 @@ class ZerodhaOrderManager(BaseOrderManager):
       logging.info('%s: Order placed successfully, orderId = %s', self.broker, orderId)
       order = Order(orderInputParams)
       order.orderId = orderId
-      order.orderPlaceTimestamp = datetime.now()
-      order.lastOrderUpdateTimestamp = datetime.now()
-
+      order.orderPlaceTimestamp = Utils.getEpoch()
+      order.lastOrderUpdateTimestamp = Utils.getEpoch()
+      return order
     except Exception as e:
       logging.info('%s Order placement failed: %s', self.broker, str(e))
       raise Exception(str(e))
@@ -51,14 +52,14 @@ class ZerodhaOrderManager(BaseOrderManager):
         order_type=orderModifyParams.newOrderType if orderModifyParams.newOrderType != None else None)
 
       logging.info('%s Order modified successfully for orderId = %s', self.broker, orderId)
-      order.lastOrderUpdateTimestamp = datetime.now()
+      order.lastOrderUpdateTimestamp = Utils.getEpoch()
       return order
     except Exception as e:
       logging.info('%s Order modify failed: %s', self.broker, str(e))
       raise Exception(str(e))
 
-  def modifyOrderToMarket(self, order, orderModifyParams):
-    logging.info('%s: Going to modify order with params %s', self.broker, orderModifyParams)
+  def modifyOrderToMarket(self, order):
+    logging.info('%s: Going to modify order with params %s', self.broker)
     kite = self.brokerHandle
     try:
       orderId = kite.modify_order(
@@ -67,7 +68,7 @@ class ZerodhaOrderManager(BaseOrderManager):
         order_type=kite.ORDER_TYPE_MARKET)
 
       logging.info('%s Order modified successfully to MARKET for orderId = %s', self.broker, orderId)
-      order.lastOrderUpdateTimestamp = datetime.now()
+      order.lastOrderUpdateTimestamp = Utils.getEpoch()
       return order
     except Exception as e:
       logging.info('%s Order modify to market failed: %s', self.broker, str(e))
@@ -82,7 +83,7 @@ class ZerodhaOrderManager(BaseOrderManager):
         order_id=order.orderId)
 
       logging.info('%s Order cancelled successfully, orderId = %s', self.broker, orderId)
-      order.lastOrderUpdateTimestamp = datetime.now()
+      order.lastOrderUpdateTimestamp = Utils.getEpoch()
       return order
     except Exception as e:
       logging.info('%s Order cancel failed: %s', self.broker, str(e))

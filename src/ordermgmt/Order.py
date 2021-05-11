@@ -1,6 +1,6 @@
 
 class Order:
-  def __init__(self, orderInputParams):
+  def __init__(self, orderInputParams = None):
     self.tradingSymbol = orderInputParams.tradingSymbol if orderInputParams != None else ""
     self.exchange = orderInputParams.exchange if orderInputParams != None else "NSE"
     self.productType = orderInputParams.productType if orderInputParams != None else ""
@@ -18,8 +18,9 @@ class Order:
     self.message = None # In case any order rejection or any other error save the response from broker in this field
     
   def __str__(self):
-    return "orderId=" + self.orderId + ", orderStatus=" + self.orderStatus \
-      + ", symbol=" + self.tradingSymbol + ", productType=" + self.productType \
-      + ", orderType=" + self.orderType + ", price=" + str(self.price) \
+    return "orderId=" + str(self.orderId) + ", orderStatus=" + str(self.orderStatus) \
+      + ", symbol=" + str(self.tradingSymbol) + ", productType=" + str(self.productType) \
+      + ", orderType=" + str(self.orderType) + ", price=" + str(self.price) \
       + ", triggerPrice=" + str(self.triggerPrice) + ", qty=" + str(self.qty) \
-      + ", filledQty=" + str(self.filledQty) + ", pendingQty=" + str(self.pendingQty)
+      + ", filledQty=" + str(self.filledQty) + ", pendingQty=" + str(self.pendingQty) \
+      + ", averagePrice=" + str(self.averagePrice)

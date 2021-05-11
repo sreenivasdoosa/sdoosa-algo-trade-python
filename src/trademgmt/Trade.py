@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 
 from trademgmt.TradeState import TradeState
 from models.ProductType import ProductType
@@ -7,7 +6,8 @@ from models.ProductType import ProductType
 from utils.Utils import Utils
 
 class Trade:
-  def __init__(self, tradingSymbol):
+  def __init__(self, tradingSymbol = None):
+    self.exchange = "NSE" 
     self.tradeID = Utils.generateTradeID() # Unique ID for each trade
     self.tradingSymbol = tradingSymbol
     self.strategy = ""
@@ -17,7 +17,6 @@ class Trade:
     self.isOptions = False # Options trade
     self.optionType = None # CE/PE. Applicable only if isOptions is True
     self.placeMarketOrder = False # True means place the entry order with Market Order Type
-    self.noTarget = False # This has to be set to True if target is not applicable for the trade i.e. Square off or SL/Trail SL
     self.intradaySquareOffTimestamp = None # Can be strategy specific. Some can square off at 15:00:00 some can at 15:15:00 etc.
     self.requestedEntry = 0 # Requested entry
     self.entry = 0 # Actual entry. This will be different from requestedEntry if the order placed is Market order
@@ -30,14 +29,13 @@ class Trade:
 
     self.tradeState = TradeState.CREATED # state of the trade
     self.timestamp = None # Set this timestamp to strategy timestamp if you are not sure what to set
-    self.createTimestamp = datetime.now() # Timestamp when the trade is created (Not triggered)
+    self.createTimestamp = Utils.getEpoch() # Timestamp when the trade is created (Not triggered)
     self.startTimestamp = None # Timestamp when the trade gets triggered and order placed
     self.endTimestamp = None # Timestamp when the trade ended
-    self.profitLoss = 0 # Profit loss of the trade. If trade is Active this shows the unrealized pnl else realized pnl
+    self.pnl = 0 # Profit loss of the trade. If trade is Active this shows the unrealized pnl else realized pnl
     self.pnlPercentage = 0 # Profit Loss in percentage terms
     self.exit = 0 # Exit price of the trade
     self.exitReason = None # SL/Target/SquareOff/Any Other
-    self.exchange = "NSE" 
     
     self.entryOrder = None # Object of Type ordermgmt.Order
     self.slOrder = None # Object of Type ordermgmt.Order
@@ -69,5 +67,6 @@ class Trade:
       + ", strategy=" + self.strategy + ", direction=" + self.direction \
       + ", productType=" + self.productType + ", reqEntry=" + str(self.requestedEntry) \
       + ", stopLoss=" + str(self.stopLoss) + ", target=" + str(self.target) \
-      + ", entry=" + str(self.entry) + ", exit=" + str(self.exit)
+      + ", entry=" + str(self.entry) + ", exit=" + str(self.exit) \
+      + ", profitLoss" + str(self.pnl)
 
