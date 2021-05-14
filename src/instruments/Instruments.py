@@ -49,6 +49,8 @@ class Instruments:
     with open(instrumentsFilepath, 'w') as isdFile:
       json.dump(instruments, isdFile, indent=2, default=str)
     logging.info('Instruments: Saved %d instruments to file %s', len(instruments), instrumentsFilepath)
+    # Update last save timestamp
+    Instruments.updateLastSavedTimestamp()
 
   @staticmethod
   def fetchInstrumentsFromServer():
@@ -61,7 +63,6 @@ class Instruments:
       # Add FnO instrument list to the main list
       instrumentsList.extend(instrumentsListFnO)
       logging.info('Fetched %d instruments from server.', len(instrumentsList))
-      Instruments.updateLastSavedTimestamp()
     except Exception as e:
       logging.exception("Exception while fetching instruments from server")
     return instrumentsList
