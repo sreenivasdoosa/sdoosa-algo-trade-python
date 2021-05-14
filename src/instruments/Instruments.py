@@ -18,7 +18,7 @@ class Instruments:
       return True
     lastSavedTimestamp = timestamps['instrumentsLastSavedAt']
     nowEpoch = Utils.getEpoch()
-    if nowEpoch - lastSavedTimestamp >= 5 * 60:
+    if nowEpoch - lastSavedTimestamp >= 24 * 60* 60:
       logging.info("Instruments: shouldFetchFromServer() returning True as its been 24 hours since last fetch.")
       return True
     return False
