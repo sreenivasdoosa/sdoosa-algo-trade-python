@@ -24,20 +24,20 @@ def initLoggingConfg(filepath):
 
 # Execution starts here
 serverConfig = getServerConfig()
+
+deployDir = serverConfig['deployDir']
+if os.path.exists(deployDir) == False:
+  print("Deploy Directory " + deployDir + " does not exist. Exiting the app.")
+  exit(-1)
+
 logFileDir = serverConfig['logFileDir']
 if os.path.exists(logFileDir) == False:
   print("LogFile Directory " + logFileDir + " does not exist. Exiting the app.")
   exit(-1)
 
-tradesDir = serverConfig['tradesDir']
-if os.path.exists(tradesDir) == False:
-  print("Trades Directory " + tradesDir + " does not exist. Exiting the app.")
-  exit(-1)
-
+print("Deploy  Directory = " + deployDir)
 print("LogFile Directory = " + logFileDir)
-print("Trades  Directory = " + tradesDir)
 initLoggingConfg(logFileDir + "/app.log")
-
 
 logging.info('serverConfig => %s', serverConfig)
 
