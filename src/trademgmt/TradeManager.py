@@ -42,11 +42,11 @@ class TradeManager:
 
     # check and create trades directory for today`s date
     serverConfig = getServerConfig()
-    tradesDir = serverConfig['tradesDir']
+    tradesDir = os.path.join(serverConfig['deployDir'], 'trades')
     TradeManager.intradayTradesDir =  os.path.join(tradesDir, Utils.getTodayDateStr())
     if os.path.exists(TradeManager.intradayTradesDir) == False:
       logging.info('TradeManager: Intraday Trades Directory %s does not exist. Hence going to create.', TradeManager.intradayTradesDir)
-      os.mkdir(TradeManager.intradayTradesDir)
+      os.mkdirs(TradeManager.intradayTradesDir)
 
     # start ticker service
     brokerName = Controller.getBrokerName()
@@ -73,15 +73,14 @@ class TradeManager:
       try:
         # Fetch all order details from broker and update orders in each trade
         TradeManager.fetchAndUpdateAllTradeOrders()
-
         # track each trade and take necessary action
         TradeManager.trackAndUpdateAllTrades()
-
-        # save updated data to json file
-        TradeManager.saveAllTradesToFile()
       except Exception as e:
         logging.exception("Exception in TradeManager Main thread")
 
+      # save updated data to json file
+      TradeManager.saveAllTradesToFile()
+      
       # sleep for 30 seconds and then continue
       time.sleep(30)
       logging.info('TradeManager: Main thread woke up..')
@@ -413,6 +412,7 @@ class TradeManager:
   def convertJSONToTrade(jsonData):
     trade = Trade(jsonData['tradingSymbol'])
     trade.tradeID = jsonData['tradeID']
+    trade.strategy = jsonData['strategy']
     trade.direction = jsonData['direction']
     trade.productType = jsonData['productType']
     trade.isFutures = jsonData['isFutures']

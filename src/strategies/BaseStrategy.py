@@ -44,8 +44,15 @@ class BaseStrategy:
     pass
 
   def calculateCapitalPerTrade(self):
-    capitalPerTrade = int(self.capital * self.leverage / self.maxTradesPerDay)
+    leverage = self.leverage if self.leverage > 0 else 1
+    capitalPerTrade = int(self.capital * leverage / self.maxTradesPerDay)
     return capitalPerTrade
+
+  def calculateLotsPerTrade(self):
+    if self.isFnO == False:
+      return 0
+    # Applicable only for fno
+    return int(self.capital / self.capitalPerSet)
 
   def canTradeToday(self):
     # Derived class should override the logic if the strategy to be traded only on specific days of the week
@@ -109,4 +116,4 @@ class BaseStrategy:
     return True
 
   def getQuote(self, tradingSymbol):
-    return Quotes.getQuote(tradingSymbol)
+    return Quotes.getQuote(tradingSymbol, self.isFnO)

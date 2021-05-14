@@ -5,12 +5,12 @@ from models.Quote import Quote
 
 class Quotes:
   @staticmethod
-  def getQuote(tradingSymbol):
+  def getQuote(tradingSymbol, isFnO = False):
     broker = Controller.getBrokerName()
     brokerHandle = Controller.getBrokerLogin().getBrokerHandle()
     quote = None
     if broker == "zerodha":
-      key = 'NSE:' + tradingSymbol # Pl note for now using only NSE exchange
+      key = ('NFO:' + tradingSymbol) if isFnO == True else ('NSE:' + tradingSymbol)
       bQuoteResp = brokerHandle.quote(key) 
       bQuote = bQuoteResp[key]
       # convert broker quote to our system quote

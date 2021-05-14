@@ -77,7 +77,7 @@ class Utils:
 
   @staticmethod
   def getTimeOfToDay(hours, minutes, seconds):
-    return getTimeOfDay(hours, minutes, seconds, datetime.now())
+    return Utils.getTimeOfDay(hours, minutes, seconds, datetime.now())
 
   @staticmethod
   def getTodayDateStr():
