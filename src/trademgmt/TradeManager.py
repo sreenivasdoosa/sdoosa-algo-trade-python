@@ -405,7 +405,7 @@ class TradeManager:
     else:
       # Place new target order to exit position
       logging.info('TradeManager: placing new target order to exit position for tradeID %s', trade.tradeID)
-      TradeManager.placeTargetOrder(trade, true)
+      TradeManager.placeTargetOrder(trade, True)
 
   @staticmethod
   def getOrderManager():
