@@ -30,7 +30,7 @@ class BNFORB30Min(BaseStrategy):
     self.productType = ProductType.MIS
     self.symbols = []
     self.slPercentage = 0
-    self.targetPerncetage = 0
+    self.targetPercentage = 0
     self.startTimestamp = Utils.getTimeOfToDay(9, 45, 0) # When to start the strategy. Default is Market start time
     self.stopTimestamp = Utils.getTimeOfToDay(14, 30, 0) # This is not square off timestamp. This is the timestamp after which no new trades will be placed under this strategy but existing trades continue to be active.
     self.squareOffTimestamp = Utils.getTimeOfToDay(15, 0, 0) # Square off time
@@ -45,10 +45,10 @@ class BNFORB30Min(BaseStrategy):
     processEndTime = Utils.getTimeOfToDay(9, 50, 0)
     if now < self.startTimestamp:
       return
-    if now > processEndTime:
+    #if now > processEndTime:
       # We are interested in creating the symbol only between 09:45 and 09:50 
       # since we are not using historical candles so not aware of exact high and low of the first 30 mins
-      return
+      #return
 
     symbol = Utils.prepareMonthlyExpiryFuturesSymbol('BANKNIFTY')
     quote = self.getQuote(symbol)
@@ -56,6 +56,7 @@ class BNFORB30Min(BaseStrategy):
         logging.error('%s: Could not get quote for %s', self.getName(), symbol)
         return
     
+    logging.info('%s: %s => lastTradedPrice = %f', self.getName(), symbol, quote.lastTradedPrice)
     if symbol not in self.tradesCreatedSymbols:
       self.generateTrade(symbol, Direction.LONG, quote.high, quote.low)
       self.generateTrade(symbol, Direction.SHORT, quote.high, quote.low)
@@ -74,7 +75,7 @@ class BNFORB30Min(BaseStrategy):
     # Calculate lots
     numLots = self.calculateLotsPerTrade()
     isd = Instruments.getInstrumentDataBySymbol(tradingSymbol) # Get instrument data to know qty per lot
-    trade.qty = isd['lot_size']
+    trade.qty = isd['lot_size'] * numLots
     
     trade.stopLoss = low if direction == Direction.LONG else high
     slDiff = high - low
@@ -95,7 +96,7 @@ class BNFORB30Min(BaseStrategy):
 
     if tick == None:
       return False
-
+    
     if trade.direction == Direction.LONG and tick.lastTradedPrice > trade.requestedEntry:
       return True
     elif trade.direction == Direction.SHORT and tick.lastTradedPrice < trade.requestedEntry:

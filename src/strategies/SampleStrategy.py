@@ -28,7 +28,7 @@ class SampleStrategy(BaseStrategy):
     self.productType = ProductType.MIS
     self.symbols = ["SBIN", "INFY", "TATASTEEL", "RELIANCE", "HDFCBANK", "CIPLA"]
     self.slPercentage = 1.1
-    self.targetPerncetage = 2.2
+    self.targetPercentage = 2.2
     self.startTimestamp = Utils.getTimeOfToDay(9, 30, 0) # When to start the strategy. Default is Market start time
     self.stopTimestamp = Utils.getTimeOfToDay(14, 30, 0) # This is not square off timestamp. This is the timestamp after which no new trades will be placed under this strategy but existing trades continue to be active.
     self.squareOffTimestamp = Utils.getTimeOfToDay(15, 0, 0) # Square off time
@@ -88,9 +88,9 @@ class SampleStrategy(BaseStrategy):
         trade.stopLoss = Utils.roundToNSEPrice(cmp + cmp * 1 / 100)
 
     if direction == 'LONG':
-      trade.target = Utils.roundToNSEPrice(breakoutPrice + breakoutPrice * self.targetPerncetage / 100)
+      trade.target = Utils.roundToNSEPrice(breakoutPrice + breakoutPrice * self.targetPercentage / 100)
     else:
-      trade.target = Utils.roundToNSEPrice(breakoutPrice - breakoutPrice * self.targetPerncetage / 100)
+      trade.target = Utils.roundToNSEPrice(breakoutPrice - breakoutPrice * self.targetPercentage / 100)
 
     trade.intradaySquareOffTimestamp = Utils.getEpoch(self.squareOffTimestamp)
     # Hand over the trade to TradeManager

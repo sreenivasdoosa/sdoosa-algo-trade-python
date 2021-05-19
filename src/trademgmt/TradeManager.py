@@ -46,7 +46,7 @@ class TradeManager:
     TradeManager.intradayTradesDir =  os.path.join(tradesDir, Utils.getTodayDateStr())
     if os.path.exists(TradeManager.intradayTradesDir) == False:
       logging.info('TradeManager: Intraday Trades Directory %s does not exist. Hence going to create.', TradeManager.intradayTradesDir)
-      os.mkdirs(TradeManager.intradayTradesDir)
+      os.makedirs(TradeManager.intradayTradesDir)
 
     # start ticker service
     brokerName = Controller.getBrokerName()
@@ -144,20 +144,32 @@ class TradeManager:
     TradeManager.symbolToCMPMap[tick.tradingSymbol] = tick.lastTradedPrice # Store the latest tick in map
     # On each new tick, get a created trade and call its strategy whether to place trade or not
     for strategy in TradeManager.strategyToInstanceMap:
-      trade = TradeManager.getUntriggeredTrade(tick.tradingSymbol, strategy)
-      if trade == None:
+      longTrade = TradeManager.getUntriggeredTrade(tick.tradingSymbol, strategy, Direction.LONG)
+      shortTrade = TradeManager.getUntriggeredTrade(tick.tradingSymbol, strategy, Direction.SHORT)
+      if longTrade == None and shortTrade == None:
         continue
       strategyInstance = TradeManager.strategyToInstanceMap[strategy]
-      if strategyInstance.shouldPlaceTrade(trade, tick):
-        # place the trade
-        isSuccess = TradeManager.executeTrade(trade)
-        if isSuccess == True:
-          # set trade state to ACTIVE
-          trade.tradeState = TradeState.ACTIVE
-          trade.startTimestamp = Utils.getEpoch()
+      if longTrade != None:
+        if strategyInstance.shouldPlaceTrade(longTrade, tick):
+          # place the longTrade
+          isSuccess = TradeManager.executeTrade(longTrade)
+          if isSuccess == True:
+            # set longTrade state to ACTIVE
+            longTrade.tradeState = TradeState.ACTIVE
+            longTrade.startTimestamp = Utils.getEpoch()
+            continue
+      
+      if shortTrade != None:
+        if strategyInstance.shouldPlaceTrade(shortTrade, tick):
+          # place the shortTrade
+          isSuccess = TradeManager.executeTrade(shortTrade)
+          if isSuccess == True:
+            # set shortTrade state to ACTIVE
+            shortTrade.tradeState = TradeState.ACTIVE
+            shortTrade.startTimestamp = Utils.getEpoch()
   
   @staticmethod
-  def getUntriggeredTrade(tradingSymbol, strategy):
+  def getUntriggeredTrade(tradingSymbol, strategy, direction):
     trade = None
     for tr in TradeManager.trades:
       if tr.tradeState == TradeState.DISABLED:
@@ -167,6 +179,8 @@ class TradeManager:
       if tr.tradingSymbol != tradingSymbol:
         continue
       if tr.strategy != strategy:
+        continue
+      if tr.direction != direction:
         continue
       trade = tr
       break
@@ -183,10 +197,12 @@ class TradeManager:
     oip.orderType = OrderType.MARKET if trade.placeMarketOrder == True else OrderType.LIMIT
     oip.price = trade.requestedEntry
     oip.qty = trade.qty
+    if trade.isFutures == True or trade.isOptions == True:
+      oip.isFnO = True
     try:
       trade.entryOrder = TradeManager.getOrderManager().placeOrder(oip)
     except Exception as e:
-      logging.exrror('TradeManager: Execute trade failed for tradeID %s: Error => %s', trade.tradeID, str(e))
+      logging.error('TradeManager: Execute trade failed for tradeID %s: Error => %s', trade.tradeID, str(e))
       return False
 
     logging.info('TradeManager: Execute trade successful for %s and entryOrder %s', trade, trade.entryOrder)
@@ -294,6 +310,8 @@ class TradeManager:
     oip.orderType = OrderType.SL_MARKET
     oip.triggerPrice = trade.stopLoss
     oip.qty = trade.qty
+    if trade.isFutures == True or trade.isOptions == True:
+      oip.isFnO = True
     try:
       trade.slOrder = TradeManager.getOrderManager().placeOrder(oip)
     except Exception as e:
@@ -310,10 +328,12 @@ class TradeManager:
     oip.orderType = OrderType.MARKET if isMarketOrder == True else OrderType.LIMIT
     oip.price = 0 if isMarketOrder == True else trade.target
     oip.qty = trade.qty
+    if trade.isFutures == True or trade.isOptions == True:
+      oip.isFnO = True
     try:
       trade.targetOrder = TradeManager.getOrderManager().placeOrder(oip)
     except Exception as e:
-      logging.exrror('TradeManager: Failed to place Target order for tradeID %s: Error => %s', trade.tradeID, str(e))
+      logging.error('TradeManager: Failed to place Target order for tradeID %s: Error => %s', trade.tradeID, str(e))
       return False
     logging.info('TradeManager: Successfully placed Target order %s for tradeID %s', trade.targetOrder.orderId, trade.tradeID)
     return True
@@ -327,7 +347,7 @@ class TradeManager:
     try:
       TradeManager.getOrderManager().cancelOrder(trade.entryOrder)
     except Exception as e:
-      logging.exrror('TradeManager: Failed to cancel Entry order %s for tradeID %s: Error => %s', trade.entryOrder.orderId, trade.tradeID, str(e))
+      logging.error('TradeManager: Failed to cancel Entry order %s for tradeID %s: Error => %s', trade.entryOrder.orderId, trade.tradeID, str(e))
     logging.info('TradeManager: Successfully cancelled Entry order %s for tradeID %s', trade.entryOrder.orderId, trade.tradeID)
 
   @staticmethod
@@ -339,7 +359,7 @@ class TradeManager:
     try:
       TradeManager.getOrderManager().cancelOrder(trade.slOrder)
     except Exception as e:
-      logging.exrror('TradeManager: Failed to cancel SL order %s for tradeID %s: Error => %s', trade.slOrder.orderId, trade.tradeID, str(e))
+      logging.error('TradeManager: Failed to cancel SL order %s for tradeID %s: Error => %s', trade.slOrder.orderId, trade.tradeID, str(e))
     logging.info('TradeManager: Successfully cancelled SL order %s for tradeID %s', trade.slOrder.orderId, trade.tradeID)
 
   @staticmethod
@@ -351,7 +371,7 @@ class TradeManager:
     try:
       TradeManager.getOrderManager().cancelOrder(trade.targetOrder)
     except Exception as e:
-      logging.exrror('TradeManager: Failed to cancel Target order %s for tradeID %s: Error => %s', trade.targetOrder.orderId, trade.tradeID, str(e))
+      logging.error('TradeManager: Failed to cancel Target order %s for tradeID %s: Error => %s', trade.targetOrder.orderId, trade.tradeID, str(e))
     logging.info('TradeManager: Successfully cancelled Target order %s for tradeID %s', trade.targetOrder.orderId, trade.tradeID)
 
   @staticmethod
@@ -385,7 +405,7 @@ class TradeManager:
     else:
       # Place new target order to exit position
       logging.info('TradeManager: placing new target order to exit position for tradeID %s', trade.tradeID)
-      TradeManager.placeTargetOrder(trade, true)
+      TradeManager.placeTargetOrder(trade, True)
 
   @staticmethod
   def getOrderManager():

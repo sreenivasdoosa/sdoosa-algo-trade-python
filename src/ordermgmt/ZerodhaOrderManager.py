@@ -20,7 +20,7 @@ class ZerodhaOrderManager(BaseOrderManager):
     try:
       orderId = kite.place_order(
         variety=kite.VARIETY_REGULAR,
-        exchange=kite.EXCHANGE_NSE,
+        exchange=kite.EXCHANGE_NFO if orderInputParams.isFnO == True else kite.EXCHANGE_NSE,
         tradingsymbol=orderInputParams.tradingSymbol,
         transaction_type=self.convertToBrokerDirection(orderInputParams.direction),
         quantity=orderInputParams.qty,

@@ -16,7 +16,7 @@ class BaseStrategy:
     self.productType = ProductType.MIS # MIS/NRML/CNC etc
     self.symbols = [] # List of stocks to be traded under this strategy
     self.slPercentage = 0
-    self.targetPerncetage = 0
+    self.targetPercentage = 0
     self.startTimestamp = Utils.getMarketStartTime() # When to start the strategy. Default is Market start time
     self.stopTimestamp = None # This is not square off timestamp. This is the timestamp after which no new trades will be placed under this strategy but existing trades continue to be active.
     self.squareOffTimestamp = None # Square off time

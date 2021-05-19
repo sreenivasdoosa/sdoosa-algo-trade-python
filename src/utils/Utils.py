@@ -210,5 +210,27 @@ class Utils:
     datetimeExpiryDay = Utils.getTimeOfDay(0, 0, 0, datetimeExpiryDay)
     return datetimeExpiryDay
 
-  
+  @staticmethod
+  def isTodayWeeklyExpiryDay():
+    expiryDate = Utils.getWeeklyExpiryDayDate()
+    todayDate = Utils.getTimeOfToDay(0, 0, 0)
+    if expiryDate == todayDate:
+      return True
+    return False
 
+  @staticmethod
+  def isTodayOneDayBeforeWeeklyExpiryDay():
+    expiryDate = Utils.getWeeklyExpiryDayDate()
+    todayDate = Utils.getTimeOfToDay(0, 0, 0)
+    if expiryDate - timedelta(days=1) == todayDate:
+      return True  
+    return False
+
+  @staticmethod
+  def getNearestStrikePrice(price, nearestMultiple = 50):
+    inputPrice = int(price)
+    remainder = int(inputPrice % nearestMultiple)
+    if remainder < int(nearestMultiple / 2):
+      return inputPrice - remainder
+    else:
+      return inputPrice + (nearestMultiple - remainder)
