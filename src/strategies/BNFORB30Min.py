@@ -45,10 +45,13 @@ class BNFORB30Min(BaseStrategy):
     processEndTime = Utils.getTimeOfToDay(9, 50, 0)
     if now < self.startTimestamp:
       return
-    #if now > processEndTime:
+    if now > processEndTime:
       # We are interested in creating the symbol only between 09:45 and 09:50 
       # since we are not using historical candles so not aware of exact high and low of the first 30 mins
-      #return
+      return
+
+    if len(self.trades) >= 2:
+      return
 
     symbol = Utils.prepareMonthlyExpiryFuturesSymbol('BANKNIFTY')
     quote = self.getQuote(symbol)
@@ -57,11 +60,9 @@ class BNFORB30Min(BaseStrategy):
         return
     
     logging.info('%s: %s => lastTradedPrice = %f', self.getName(), symbol, quote.lastTradedPrice)
-    if symbol not in self.tradesCreatedSymbols:
-      self.generateTrade(symbol, Direction.LONG, quote.high, quote.low)
-      self.generateTrade(symbol, Direction.SHORT, quote.high, quote.low)
-      # add symbol to created list
-      self.tradesCreatedSymbols.append(symbol)
+    self.generateTrade(symbol, Direction.LONG, quote.high, quote.low)
+    self.generateTrade(symbol, Direction.SHORT, quote.high, quote.low)
+
 
   def generateTrade(self, tradingSymbol, direction, high, low):
     trade = Trade(tradingSymbol)
