@@ -77,9 +77,10 @@ class BaseStrategy:
       return
 
     if now < self.startTimestamp:
-      waitSeconds = now - self.startTimestamp
+      waitSeconds = Utils.getEpoch(self.startTimestamp) - Utils.getEpoch(now)
       logging.info("%s: Waiting for %d seconds till startegy start timestamp reaches...", self.getName(), waitSeconds)
-      time.sleep(waitSeconds)      
+      if waitSeconds > 0:
+        time.sleep(waitSeconds)      
 
     # Run in an loop and keep processing
     while True:
