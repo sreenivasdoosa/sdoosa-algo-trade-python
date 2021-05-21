@@ -230,14 +230,13 @@ class TradeManager:
   def trackAndUpdateAllTrades():
     for trade in TradeManager.trades:
       if trade.tradeState == TradeState.ACTIVE:
+        TradeManager.trackEntryOrder(trade)
+        TradeManager.trackSLOrder(trade)
+        TradeManager.trackTargetOrder(trade)
         if trade.intradaySquareOffTimestamp != None:
           nowEpoch = Utils.getEpoch()
           if nowEpoch >= trade.intradaySquareOffTimestamp:
             TradeManager.squareOffTrade(trade, TradeExitReason.SQUARE_OFF)
-        
-        TradeManager.trackEntryOrder(trade)
-        TradeManager.trackSLOrder(trade)
-        TradeManager.trackTargetOrder(trade)
 
   @staticmethod
   def trackEntryOrder(trade):
