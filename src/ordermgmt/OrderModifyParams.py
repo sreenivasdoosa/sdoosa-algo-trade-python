@@ -7,6 +7,6 @@ class OrderModifyParams:
     self.newOrderType = None # Ex: Can change LIMIT order to SL order or vice versa. Not supported by all brokers
 
   def __str__(self):
-    return + "newPrice=" + str(self.newPrice) + ", newTriggerPrice=" + str(self.newTriggerPrice) \
+    return "newPrice=" + str(self.newPrice) + ", newTriggerPrice=" + str(self.newTriggerPrice) \
       + ", newQty=" + str(self.newQty) + ", newOrderType=" + str(self.newOrderType)
       

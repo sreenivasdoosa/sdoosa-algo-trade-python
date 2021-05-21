@@ -39,6 +39,8 @@ class SampleStrategy(BaseStrategy):
     self.capitalPerSet = 0 # Applicable if isFnO is True (1 set means 1CE/1PE or 2CE/2PE etc based on your strategy logic)
 
   def process(self):
+    if len(self.trades) >= self.maxTradesPerDay:
+      return
     # This is a sample strategy with the following logic:
     # 1. If current market price > 0.5% from previous day close then create LONG trade
     # 2. If current market price < 0.5% from previous day close then create SHORT trade
@@ -63,8 +65,7 @@ class SampleStrategy(BaseStrategy):
       if direction == None:
         continue
 
-      if symbol not in self.tradesCreatedSymbols:
-        self.generateTrade(symbol, direction, breakoutPrice, cmp)
+      self.generateTrade(symbol, direction, breakoutPrice, cmp)
 
 
   def generateTrade(self, tradingSymbol, direction, breakoutPrice, cmp):
@@ -95,9 +96,6 @@ class SampleStrategy(BaseStrategy):
     trade.intradaySquareOffTimestamp = Utils.getEpoch(self.squareOffTimestamp)
     # Hand over the trade to TradeManager
     TradeManager.addNewTrade(trade)
-
-    # add symbol to created list
-    self.tradesCreatedSymbols.append(tradingSymbol)
 
   def shouldPlaceTrade(self, trade, tick):
     # First call base class implementation and if it returns True then only proceed

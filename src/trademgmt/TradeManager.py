@@ -13,6 +13,7 @@ from trademgmt.TradeExitReason import TradeExitReason
 from trademgmt.TradeEncoder import TradeEncoder
 from ordermgmt.ZerodhaOrderManager import ZerodhaOrderManager
 from ordermgmt.OrderInputParams import OrderInputParams
+from ordermgmt.OrderModifyParams import OrderModifyParams
 from ordermgmt.Order import Order
 from models.OrderType import OrderType
 from models.OrderStatus import OrderStatus
@@ -131,6 +132,10 @@ class TradeManager:
     if trade.tradingSymbol not in TradeManager.registeredSymbols:
       TradeManager.ticker.registerSymbols([trade.tradingSymbol])
       TradeManager.registeredSymbols.append(trade.tradingSymbol)
+    # Also add the trade to strategy trades list
+    strategyInstance = TradeManager.strategyToInstanceMap[trade.strategy]
+    if strategyInstance != None:
+      strategyInstance.addTradeToList(trade)
 
   @staticmethod
   def disableTrade(trade, reason):
@@ -225,14 +230,13 @@ class TradeManager:
   def trackAndUpdateAllTrades():
     for trade in TradeManager.trades:
       if trade.tradeState == TradeState.ACTIVE:
+        TradeManager.trackEntryOrder(trade)
+        TradeManager.trackSLOrder(trade)
+        TradeManager.trackTargetOrder(trade)
         if trade.intradaySquareOffTimestamp != None:
           nowEpoch = Utils.getEpoch()
           if nowEpoch >= trade.intradaySquareOffTimestamp:
             TradeManager.squareOffTrade(trade, TradeExitReason.SQUARE_OFF)
-        
-        TradeManager.trackEntryOrder(trade)
-        TradeManager.trackSLOrder(trade)
-        TradeManager.trackTargetOrder(trade)
 
   @staticmethod
   def trackEntryOrder(trade):
@@ -256,7 +260,7 @@ class TradeManager:
   def trackSLOrder(trade):
     if trade.tradeState != TradeState.ACTIVE:
       return
-    if trade.stopLoss == 0: # Do not place SL order if no stoploss provided
+    if trade.stopLoss == 0: # Do not place SL order if no stopLoss provided
       return
     if trade.slOrder == None:
       # Place SL order
@@ -265,7 +269,8 @@ class TradeManager:
       if trade.slOrder.orderStatus == OrderStatus.COMPLETE:
         # SL Hit
         exit = trade.slOrder.averagePrice
-        TradeManager.setTradeToCompleted(trade, exit, TradeExitReason.SL_HIT)
+        exitReason = TradeExitReason.SL_HIT if trade.initialStopLoss == trade.stopLoss else TradeExitReason.TRAIL_SL_HIT
+        TradeManager.setTradeToCompleted(trade, exit, exitReason)
         # Make sure to cancel target order if exists
         TradeManager.cancelTargetOrder(trade)
 
@@ -276,6 +281,34 @@ class TradeManager:
         TradeManager.setTradeToCompleted(trade, exit, TradeExitReason.SL_CANCELLED)
         # Cancel target order if exists
         TradeManager.cancelTargetOrder(trade)
+
+      else:
+        TradeManager.checkAndUpdateTrailSL(trade)
+
+  @staticmethod
+  def checkAndUpdateTrailSL(trade):
+    # Trail the SL if applicable for the trade
+    strategyInstance = TradeManager.strategyToInstanceMap[trade.strategy]
+    if strategyInstance == None:
+      return
+
+    newTrailSL = strategyInstance.getTrailingSL(trade)
+    updateSL = False
+    if newTrailSL > 0:
+      if trade.direction == Direction.LONG and newTrailSL > trade.stopLoss:
+        updateSL = True
+      elif trade.direction == Direction.SHORT and newTrailSL < trade.stopLoss:
+        updateSL = True
+    if updateSL == True:
+      omp = OrderModifyParams()
+      omp.newTriggerPrice = newTrailSL
+      try:
+        oldSL = trade.stopLoss
+        TradeManager.getOrderManager().modifyOrder(trade.slOrder, omp)
+        logging.info('TradeManager: Trail SL: Successfully modified stopLoss from %f to %f for tradeID %s', oldSL, newTrailSL, trade.tradeID)
+        trade.stopLoss = newTrailSL # IMPORTANT: Dont forget to update this on successful modification
+      except Exception as e:
+        logging.error('TradeManager: Failed to modify SL order for tradeID %s orderId %s: Error => %s', trade.tradeID, trade.slOrder.orderId, str(e))
 
   @staticmethod
   def trackTargetOrder(trade):
@@ -429,6 +462,14 @@ class TradeManager:
     return count
 
   @staticmethod
+  def getAllTradesByStrategy(strategy):
+    tradesByStrategy = []
+    for trade in TradeManager.trades:
+      if trade.strategy == strategy:
+        tradesByStrategy.append(trade)
+    return tradesByStrategy
+
+  @staticmethod
   def convertJSONToTrade(jsonData):
     trade = Trade(jsonData['tradingSymbol'])
     trade.tradeID = jsonData['tradeID']
@@ -485,3 +526,6 @@ class TradeManager:
     order.message = jsonData['message']
     return order
 
+  @staticmethod
+  def getLastTradedPrice(tradingSymbol):
+    return TradeManager.symbolToCMPMap[tradingSymbol]
