@@ -31,14 +31,14 @@ class ShortStraddleBNF(BaseStrategy):
     self.symbols = []
     self.slPercentage = 30
     self.targetPercentage = 0
-    self.startTimestamp = Utils.getTimeOfToDay(11, 0, 0) # When to start the strategy. Default is Market start time
-    self.stopTimestamp = Utils.getTimeOfToDay(14, 0, 0) # This is not square off timestamp. This is the timestamp after which no new trades will be placed under this strategy but existing trades continue to be active.
-    self.squareOffTimestamp = Utils.getTimeOfToDay(14, 30, 0) # Square off time
-    self.capital = 100000 # Capital to trade (This is the margin you allocate from your broker account for this strategy)
+    self.startTimestamp = Utils.getTimeOfToDay(9, 30, 0) # When to start the strategy. Default is Market start time
+    self.stopTimestamp = Utils.getTimeOfToDay(10, 0, 0) # This is not square off timestamp. This is the timestamp after which no new trades will be placed under this strategy but existing trades continue to be active.
+    self.squareOffTimestamp = Utils.getTimeOfToDay(15, 00, 0) # Square off time
+    self.capital = 300000 # Capital to trade (This is the margin you allocate from your broker account for this strategy)
     self.leverage = 0
-    self.maxTradesPerDay = 2 # (1 CE + 1 PE) Max number of trades per day under this strategy
+    self.maxTradesPerDay = 4 # (2 CE + 2 PE) Max number of trades per day under this strategy
     self.isFnO = True # Does this strategy trade in FnO or not
-    self.capitalPerSet = 100000 # Applicable if isFnO is True (1 set means 1CE/1PE or 2CE/2PE etc based on your strategy logic)
+    self.capitalPerSet = 150000 # Applicable if isFnO is True (1 set means 1CE/1PE or 2CE/2PE etc based on your strategy logic)
 
   def canTradeToday(self):
     # Even if you remove this function canTradeToday() completely its same as allowing trade every day
@@ -64,11 +64,29 @@ class ShortStraddleBNF(BaseStrategy):
     ATMCESymbol = Utils.prepareWeeklyOptionsSymbol("BANKNIFTY", ATMStrike, 'CE')
     ATMPESymbol = Utils.prepareWeeklyOptionsSymbol("BANKNIFTY", ATMStrike, 'PE')
     logging.info('%s: ATMCESymbol = %s, ATMPESymbol = %s', self.getName(), ATMCESymbol, ATMPESymbol)
-    # create trades
-    self.generateTrades(ATMCESymbol, ATMPESymbol)
 
-  def generateTrades(self, ATMCESymbol, ATMPESymbol):
+    OTMCESymbol = Utils.prepareWeeklyOptionsSymbol("BANKNIFTY", ATMStrike+400, 'CE')
+    OTMPESymbol = Utils.prepareWeeklyOptionsSymbol("BANKNIFTY", ATMStrike-400, 'PE')
+    logging.info('%s: OTMCESymbol = %s, OTMPESymbol = %s', self.getName(), OTMCESymbol, OTMPESymbol)
+
+    # create trades
+    self.generateATMtrades(ATMCESymbol, ATMPESymbol)
+    self.generateOTMtrades(OTMCESymbol, OTMPESymbol)
+
+  def generateATMtrades(self, ATMCESymbol, ATMPESymbol):
     numLots = self.calculateLotsPerTrade()
+    quoteATMCESymbol = self.getQuote(ATMCESymbol)
+    quoteATMPESymbol = self.getQuote(ATMPESymbol)
+    if quoteATMCESymbol == None or quoteATMPESymbol == None:
+      logging.error('%s: Could not get quotes for option symbols', self.getName())
+      return
+
+    self.generateTrade(ATMCESymbol, numLots, quoteATMCESymbol.lastTradedPrice)
+    self.generateTrade(ATMPESymbol, numLots, quoteATMPESymbol.lastTradedPrice)
+    logging.info('%s: Trades generated.', self.getName())
+
+  def generateOTMtrades(self, ATMCESymbol, ATMPESymbol):
+    numLots = self.calculateLotsPerTrade()*2 #multiply by 2 for OTM LOTs with restpect to ATM
     quoteATMCESymbol = self.getQuote(ATMCESymbol)
     quoteATMPESymbol = self.getQuote(ATMPESymbol)
     if quoteATMCESymbol == None or quoteATMPESymbol == None:
@@ -116,10 +134,17 @@ class ShortStraddleBNF(BaseStrategy):
       return 0
 
     trailSL = 0
-    profitPoints = int(trade.entry - lastTradedPrice)
-    if profitPoints >= 5:
-      factor = int(profitPoints / 5)
-      trailSL = Utils.roundToNSEPrice(trade.initialStopLoss - factor * 5)
+    profitPointsPer = int(((trade.entry - lastTradedPrice)/trade.entry)*100)
+    if profitPointsPer >= 10: #10% Move
+      factor = int((profitPointsPer / 10)*5) # 5% SL
+      trailSL = Utils.roundToNSEPrice(trade.initialStopLoss - int(factor * trade.initialStopLoss/100))
+
+    # trailSL = 0
+    # profitPoints = int(trade.entry - lastTradedPrice)
+    # if profitPoints >= 5:
+    #   factor = int(profitPoints / 5)
+    #   trailSL = Utils.roundToNSEPrice(trade.initialStopLoss - factor * 5)
+
     logging.info('%s: %s Returning trail SL %f', self.getName(), trade.tradingSymbol, trailSL)
     return trailSL
 
