@@ -18,6 +18,16 @@ class Trade:
     self.optionType = None # CE/PE. Applicable only if isOptions is True
     self.placeMarketOrder = False # True means place the entry order with Market Order Type
     self.intradaySquareOffTimestamp = None # Can be strategy specific. Some can square off at 15:00:00 some can at 15:15:00 etc.
+    self.strategySL = 0 #Set the strategy level SL.
+    self.strategyCurrentSL = 0
+    self.strategyTGT = 0 # Will be the reference for lock and trail SL
+    self.strategyTGTlock=0 #MInimum Amount to be locked if PNL hit strategyTGT
+    self.strategyTrailPL =0 # Similar to Stockmock
+    self.strategyTrailInc = 0  # Similar to Stockmock
+    self.strategyTrailPLstep = 0 # Similar to Stockmock
+    self.strategyTSL=False
+    self.strategyExit=False
+
     self.requestedEntry = 0 # Requested entry
     self.entry = 0 # Actual entry. This will be different from requestedEntry if the order placed is Market order
     self.qty = 0 # Requested quantity
@@ -36,6 +46,7 @@ class Trade:
     self.pnlPercentage = 0 # Profit Loss in percentage terms
     self.exit = 0 # Exit price of the trade
     self.exitReason = None # SL/Target/SquareOff/Any Other
+    self.tsl=0
     
     self.entryOrder = None # Object of Type ordermgmt.Order
     self.slOrder = None # Object of Type ordermgmt.Order

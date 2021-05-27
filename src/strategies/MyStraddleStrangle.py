@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from math import floor
 
 from instruments.Instruments import Instruments
 from models.Direction import Direction
@@ -10,29 +11,29 @@ from trademgmt.Trade import Trade
 from trademgmt.TradeManager import TradeManager
 
 # Each strategy has to be derived from BaseStrategy
-class ShortStraddleBNF(BaseStrategy):
+class ShortStraddleStrangleBNF(BaseStrategy):
   __instance = None
 
   @staticmethod
   def getInstance(): # singleton class
-    if ShortStraddleBNF.__instance == None:
-      ShortStraddleBNF()
-    return ShortStraddleBNF.__instance
+    if ShortStraddleStrangleBNF.__instance == None:
+      ShortStraddleStrangleBNF()
+    return ShortStraddleStrangleBNF.__instance
 
   def __init__(self):
-    if ShortStraddleBNF.__instance != None:
+    if ShortStraddleStrangleBNF.__instance != None:
       raise Exception("This class is a singleton!")
     else:
-      ShortStraddleBNF.__instance = self
+      ShortStraddleStrangleBNF.__instance = self
     # Call Base class constructor
-    super().__init__("ShortStraddleBNF")
+    super().__init__("ShortStraddleStrangleBNF")
     # Initialize all the properties specific to this strategy
     self.productType = ProductType.MIS
     self.symbols = []
     self.slPercentage = 30
     self.targetPercentage = 0
-    self.startTimestamp = Utils.getTimeOfToDay(9, 30, 0) # When to start the strategy. Default is Market start time
-    self.stopTimestamp = Utils.getTimeOfToDay(10, 0, 0) # This is not square off timestamp. This is the timestamp after which no new trades will be placed under this strategy but existing trades continue to be active.
+    self.startTimestamp = Utils.getTimeOfToDay(9, 45, 0) # When to start the strategy. Default is Market start time
+    self.stopTimestamp = Utils.getTimeOfToDay(10, 50, 0) # This is not square off timestamp. This is the timestamp after which no new trades will be placed under this strategy but existing trades continue to be active.
     self.squareOffTimestamp = Utils.getTimeOfToDay(15, 00, 0) # Square off time
     self.capital = 300000 # Capital to trade (This is the margin you allocate from your broker account for this strategy)
     self.leverage = 0
@@ -47,8 +48,10 @@ class ShortStraddleBNF(BaseStrategy):
   def process(self):
     now = datetime.now()
     if now < self.startTimestamp:
+      logging.error("selva")
       return
     if len(self.trades) >= self.maxTradesPerDay:
+      logging.error("selva1")
       return
 
     # Get current market price of Nifty Future
@@ -134,10 +137,11 @@ class ShortStraddleBNF(BaseStrategy):
       return 0
 
     trailSL = 0
-    profitPointsPer = int(((trade.entry - lastTradedPrice)/trade.entry)*100)
+    profitPointsPer = ((trade.entry - lastTradedPrice)/trade.entry)*100
     if profitPointsPer >= 10: #10% Move
-      factor = int((profitPointsPer / 10)*5) # 5% SL
-      trailSL = Utils.roundToNSEPrice(trade.initialStopLoss - int(factor * trade.initialStopLoss/100))
+      factor = (floor(profitPointsPer / 10))*5 # 5% SL
+      trailSL = Utils.roundToNSEPrice(trade.initialStopLoss - (factor * trade.initialStopLoss/100))
+
 
     # trailSL = 0
     # profitPoints = int(trade.entry - lastTradedPrice)
@@ -145,6 +149,15 @@ class ShortStraddleBNF(BaseStrategy):
     #   factor = int(profitPoints / 5)
     #   trailSL = Utils.roundToNSEPrice(trade.initialStopLoss - factor * 5)
 
-    logging.info('%s: %s Returning trail SL %f', self.getName(), trade.tradingSymbol, trailSL)
-    return trailSL
+    # logging.info('%s: %s Returning trail SL %f', self.getName(), trade.tradingSymbol, trailSL)
+    if(trade.tsl==0):
+      trade.tsl = trailSL
+    if(trailSL<trade.tsl and trade.tsl!=0):
+      trade.tsl = trailSL
+      logging.info('%s: %s Returning trail SL %f', self.getName(), trade.tradingSymbol, trade.tsl)
+      return trailSL
+    else:
+      logging.info('%s: %s Returning trail SL %f', self.getName(), trade.tradingSymbol, trade.tsl)
+      return trade.tsl
+
 

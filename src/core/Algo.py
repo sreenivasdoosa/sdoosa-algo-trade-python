@@ -8,7 +8,7 @@ from trademgmt.TradeManager import TradeManager
 from strategies.SampleStrategy import SampleStrategy
 from strategies.BNFORB30Min import BNFORB30Min
 from strategies.OptionSelling import OptionSelling
-from strategies.ShortStraddleBNF import ShortStraddleBNF
+from strategies.MyStraddleStrangle import ShortStraddleStrangleBNF
 
 #from Test import Test
 
@@ -35,7 +35,7 @@ class Algo:
     #threading.Thread(target=SampleStrategy.getInstance().run).start()
     #threading.Thread(target=BNFORB30Min.getInstance().run).start()
     #threading.Thread(target=OptionSelling.getInstance().run).start()
-    threading.Thread(target=ShortStraddleBNF.getInstance().run).start()
+    threading.Thread(target=ShortStraddleStrangleBNF.getInstance().run).start()
     
     Algo.isAlgoRunning = True
     logging.info("Algo started.")

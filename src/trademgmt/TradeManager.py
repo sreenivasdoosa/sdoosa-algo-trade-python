@@ -1,9 +1,11 @@
+
 import os
 import logging
 import time
 import json
-from datetime import datetime
 
+
+from math import floor
 from config.Config import getServerConfig
 from core.Controller import Controller
 from ticker.ZerodhaTicker import ZerodhaTicker
@@ -74,6 +76,8 @@ class TradeManager:
       try:
         # Fetch all order details from broker and update orders in each trade
         TradeManager.fetchAndUpdateAllTradeOrders()
+        # # track each trade and compute strategy PNL
+        # TradeManager.trackStrategyTSL()
         # track each trade and take necessary action
         TradeManager.trackAndUpdateAllTrades()
       except Exception as e:
@@ -284,6 +288,24 @@ class TradeManager:
 
       else:
         TradeManager.checkAndUpdateTrailSL(trade)
+
+  @staticmethod
+  def trackStrategyTSL():
+    pnl_l = 0
+    for trade in TradeManager.trades:
+      if trade.tradeState != TradeState.ACTIVE:
+        return
+      if trade.strategyTSL == False:  # Do not continue if Strategy SL / PNL trailing enabled
+        return
+      if trade.tradeState == TradeState.ACTIVE:
+        pnl_l = pnl_l+Utils.calculateTradePnl(trade)
+    if(pnl_l<=trade.strategySL):
+      trade.strategyExit=True
+    elif(pnl_l>trade.strategyTGT):
+      if(floor(pnl_l-trade.strategyTGT)>trade.strategyTrailPLInc):
+        trade.strategyTSL = floor((pnl_l-trade.strategyTGT)/trade.strategyTrailPLInc)
+        trade.strategySL = int(trade.strategyTGTlock+(trade.strategyTSL*trade.strategyTrailPLstep))
+
 
   @staticmethod
   def checkAndUpdateTrailSL(trade):
