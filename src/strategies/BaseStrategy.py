@@ -77,6 +77,7 @@ class BaseStrategy:
       logging.warn("%s: Not going to run strategy as it cannot be traded today.", self.getName())
       return
 
+    now = datetime.now()
     if now < self.startTimestamp:
       waitSeconds = Utils.getEpoch(self.startTimestamp) - Utils.getEpoch(now)
       logging.info("%s: Waiting for %d seconds till startegy start timestamp reaches...", self.getName(), waitSeconds)
