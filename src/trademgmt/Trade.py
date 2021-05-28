@@ -18,6 +18,7 @@ class Trade:
     self.optionType = None # CE/PE. Applicable only if isOptions is True
     self.placeMarketOrder = False # True means place the entry order with Market Order Type
     self.intradaySquareOffTimestamp = None # Can be strategy specific. Some can square off at 15:00:00 some can at 15:15:00 etc.
+
     self.strategySL = 0 #Set the strategy level SL.
     self.strategyCurrentSL = 0
     self.strategyTGT = 0 # Will be the reference for lock and trail SL
@@ -26,6 +27,7 @@ class Trade:
     self.strategyTrailInc = 0  # Similar to Stockmock
     self.strategyTrailPLstep = 0 # Similar to Stockmock
     self.strategyTSL=False
+    self.strategyTSLenable = False
     self.strategyExit=False
 
     self.requestedEntry = 0 # Requested entry

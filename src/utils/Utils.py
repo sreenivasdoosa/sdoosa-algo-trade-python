@@ -1,9 +1,15 @@
 import math
+import os
 import uuid
-import time
 import logging
 import calendar
+import json
+from json2html import *
+from bs4 import BeautifulSoup
+import pandas as pd
+import time
 from datetime import datetime, timedelta
+from config.Config import getServerConfig
 
 from config.Config import getHolidays
 from models.Direction import Direction
@@ -234,3 +240,50 @@ class Utils:
       return inputPrice - remainder
     else:
       return inputPrice + (nearestMultiple - remainder)
+
+  @staticmethod
+  def htmlSummaryUpdate():
+    # check and create trades directory for today`s date
+    serverConfig = getServerConfig()
+    tradesDir = os.path.join(serverConfig['deployDir'], 'trades')
+    intradayTradesDir = os.path.join(tradesDir, Utils.getTodayDateStr())
+    tradesFilepath = os.path.join(intradayTradesDir, 'trades.json')
+    # Opening JSON file
+    datapd = pd.read_json(tradesFilepath, 'r')
+    if (not (datapd.empty)):
+      datasummary = datapd[
+        ['tradingSymbol', "direction", "qty", 'entry', "initialStopLoss", "stopLoss", "cmp", "pnl", "pnlPercentage",
+         "exit", "exitReason","tradeState","strategySL"]]
+      # Get indexes where name column has value john
+      indexNames = datasummary[datasummary['tradeState'] == 'disabled'].index
+      # Delete these row indexes from dataFrame
+      datasummary.drop(indexNames, inplace=True)
+
+
+      dataEntry = datapd['entryOrder']
+      dataEntry = dataEntry.dropna()
+      # dataEntry = pd.to_datetime(dataEntry['orderPlaceTimestamp'], unit='s')
+      dataSL = datapd['slOrder']
+      dataSL = dataSL.dropna()
+      # dataSL = pd.to_datetime(dataSL['orderPlaceTimestamp'], unit='s')
+
+      datasummary = datasummary.to_json(orient="records")
+      dataEntry = dataEntry.to_json(orient="records")
+      dataSL = dataSL.to_json(orient="records")
+
+      body = (json2html.convert(json=datasummary))
+      body1 = (json2html.convert(json=dataEntry))
+      body2 = (json2html.convert(json=dataSL))
+
+      # Open test.html for reading
+      with open('../src/templates/StraddleStrangle.html') as html_file:
+        soup = BeautifulSoup(html_file.read(), features='html.parser')
+        soup.table.replace_with(body);
+        soup.table.replace_with(body1);
+        soup.table.replace_with(body2);
+        # Store prettified version of modified html
+        new_text = soup.prettify(formatter=None)
+
+      # Write new contents to test.html
+      with open('../src/templates/StraddleStrangle.html', mode='w') as new_html_file:
+        new_html_file.write(new_text)

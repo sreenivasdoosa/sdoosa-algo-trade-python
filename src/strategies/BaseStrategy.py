@@ -25,6 +25,15 @@ class BaseStrategy:
     self.maxTradesPerDay = 1 # Max number of trades per day under this strategy
     self.isFnO = False # Does this strategy trade in FnO or not
     self.capitalPerSet = 0 # Applicable if isFnO is True (Set means 1CE/1PE or 2CE/2PE etc based on your strategy logic)
+
+    self.strategyTSL = False
+    self.strategySL = 0
+    self.strategyTGT = 0
+    self.strategyTGTlock = 0
+    self.strategyTrailPLInc=0
+    self.strategyTrailPLstep=0
+    self.strategyExit=False
+
     # Register strategy with trade manager
     TradeManager.registerStrategy(self)
     # Load all trades of this strategy into self.trades on restart of app
@@ -126,3 +135,6 @@ class BaseStrategy:
 
   def getTrailingSL(self, trade):
     return 0
+
+  def lockAndTrailPNL(self):
+    return False

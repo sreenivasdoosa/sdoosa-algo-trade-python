@@ -77,7 +77,7 @@ class TradeManager:
         # Fetch all order details from broker and update orders in each trade
         TradeManager.fetchAndUpdateAllTradeOrders()
         # # track each trade and compute strategy PNL
-        # TradeManager.trackStrategyTSL()
+        TradeManager.trackStrategyTSL()
         # track each trade and take necessary action
         TradeManager.trackAndUpdateAllTrades()
       except Exception as e:
@@ -85,7 +85,8 @@ class TradeManager:
 
       # save updated data to json file
       TradeManager.saveAllTradesToFile()
-      
+      #update HTML file
+      Utils.htmlSummaryUpdate()
       # sleep for 30 seconds and then continue
       time.sleep(30)
       logging.info('TradeManager: Main thread woke up..')
@@ -241,6 +242,8 @@ class TradeManager:
           nowEpoch = Utils.getEpoch()
           if nowEpoch >= trade.intradaySquareOffTimestamp:
             TradeManager.squareOffTrade(trade, TradeExitReason.SQUARE_OFF)
+        elif trade.strategyExit == True:
+            TradeManager.squareOffTrade(trade, TradeExitReason.STRATEGY_TSL_HIT)
 
   @staticmethod
   def trackEntryOrder(trade):
@@ -290,22 +293,26 @@ class TradeManager:
         TradeManager.checkAndUpdateTrailSL(trade)
 
   @staticmethod
-  def trackStrategyTSL():
+  def getStrategyPNL(strategy):
+    count = 0
     pnl_l = 0
     for trade in TradeManager.trades:
-      if trade.tradeState != TradeState.ACTIVE:
-        return
-      if trade.strategyTSL == False:  # Do not continue if Strategy SL / PNL trailing enabled
-        return
-      if trade.tradeState == TradeState.ACTIVE:
-        pnl_l = pnl_l+Utils.calculateTradePnl(trade)
-    if(pnl_l<=trade.strategySL):
-      trade.strategyExit=True
-    elif(pnl_l>trade.strategyTGT):
-      if(floor(pnl_l-trade.strategyTGT)>trade.strategyTrailPLInc):
-        trade.strategyTSL = floor((pnl_l-trade.strategyTGT)/trade.strategyTrailPLInc)
-        trade.strategySL = int(trade.strategyTGTlock+(trade.strategyTSL*trade.strategyTrailPLstep))
+      if trade.strategy != strategy:
+        continue
+      if trade.tradeState == TradeState.CREATED or trade.tradeState == TradeState.DISABLED:
+        continue
+      pnl_l = pnl_l+trade.pnl
+    return pnl_l
 
+  @staticmethod
+  def trackStrategyTSL():
+    for trade in TradeManager.trades:
+      strategyInstance = TradeManager.strategyToInstanceMap[trade.strategy]
+      if strategyInstance == None:
+        continue
+      if trade.tradeState == TradeState.ACTIVE:
+        trade.strategyExit = strategyInstance.lockAndTrailPNL()
+    return
 
   @staticmethod
   def checkAndUpdateTrailSL(trade):
