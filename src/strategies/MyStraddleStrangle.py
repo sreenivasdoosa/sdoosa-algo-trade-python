@@ -181,6 +181,7 @@ class ShortStraddleStrangleBNF(BaseStrategy):
     def lockAndTrailPNL(self):
         if(self.strategyTSL==True):
             strategypnl = TradeManager.getStrategyPNL(self.getName())
+            print(strategypnl)
             if (strategypnl <= self.strategySL):
                 return True
             elif strategypnl > self.strategyTGT:
