@@ -6,9 +6,9 @@ from instruments.Instruments import Instruments
 from models.Direction import Direction
 from models.ProductType import ProductType
 from strategies.BaseStrategy import BaseStrategy
-from utils.Utils import Utils
 from trademgmt.Trade import Trade
 from trademgmt.TradeManager import TradeManager
+from utils.Utils import Utils
 
 
 # Each strategy has to be derived from BaseStrategy
@@ -36,7 +36,7 @@ class ShortStraddleStrangleBNF(BaseStrategy):
         self.startTimestamp = Utils.getTimeOfToDay(9, 45, 0)  # When to start the strategy. Default is Market start time
         self.stopTimestamp = Utils.getTimeOfToDay(10, 50,
                                                   0)  # This is not square off timestamp. This is the timestamp after which no new trades will be placed under this strategy but existing trades continue to be active.
-        self.squareOffTimestamp = Utils.getTimeOfToDay(15, 00, 0)  # Square off time
+        self.squareOffTimestamp = Utils.getTimeOfToDay(15, 5, 0)  # Square off time
         self.capital = 300000  # Capital to trade (This is the margin you allocate from your broker account for this strategy)
         self.leverage = 0
         self.maxTradesPerDay = 4  # (2 CE + 2 PE) Max number of trades per day under this strategy
@@ -181,11 +181,14 @@ class ShortStraddleStrangleBNF(BaseStrategy):
     def lockAndTrailPNL(self):
         if(self.strategyTSL==True):
             strategypnl = TradeManager.getStrategyPNL(self.getName())
-            print(strategypnl)
+            logging.info('%s:Returning Strategy PNL %f %f', self.getName(), strategypnl, self.strategySL)
             if (strategypnl <= self.strategySL):
                 return True
             elif strategypnl > self.strategyTGT:
                 if floor(strategypnl - self.strategyTGT) > self.strategyTrailPLInc:
-                    self.strategySL = int(self.strategyTGTlock + ((floor((strategypnl - self.strategyTGT)
-                                                / self.strategyTrailPLInc)) * self.strategyTrailPLstep))
+                    temppnl = int(self.strategyTGTlock + ((floor((strategypnl - self.strategyTGT)
+                                                                 / self.strategyTrailPLInc)) * self.strategyTrailPLstep))
+                    if (self.strategySL < temppnl):
+                        self.strategySL = temppnl
+
                 return False
