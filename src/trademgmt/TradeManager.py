@@ -1,31 +1,28 @@
-
-import os
-import logging
-import time
 import json
+import logging
+import os
+import time
 
-
-from math import floor
 from config.Config import getServerConfig
 from core.Controller import Controller
-from ticker.ZerodhaTicker import ZerodhaTicker
-from trademgmt.Trade import Trade
-from trademgmt.TradeState import TradeState
-from trademgmt.TradeExitReason import TradeExitReason
-from trademgmt.TradeEncoder import TradeEncoder
-from ordermgmt.ZerodhaOrderManager import ZerodhaOrderManager
+from models.Direction import Direction
+from models.OrderStatus import OrderStatus
+from models.OrderType import OrderType
+from ordermgmt.Order import Order
 from ordermgmt.OrderInputParams import OrderInputParams
 from ordermgmt.OrderModifyParams import OrderModifyParams
-from ordermgmt.Order import Order
-from models.OrderType import OrderType
-from models.OrderStatus import OrderStatus
-from models.Direction import Direction
-
+from ordermgmt.ZerodhaOrderManager import ZerodhaOrderManager
+from ticker.ZerodhaTicker import ZerodhaTicker
+from trademgmt.Trade import Trade
+from trademgmt.TradeEncoder import TradeEncoder
+from trademgmt.TradeExitReason import TradeExitReason
+from trademgmt.TradeState import TradeState
 from utils.Utils import Utils
+
 
 class TradeManager:
   ticker = None
-  trades = [] # to store all the trades
+  trades = []  # to store all the trades
   strategyToInstanceMap = {}
   symbolToCMPMap = {}
   intradayTradesDir = None
@@ -312,6 +309,8 @@ class TradeManager:
         continue
       if trade.tradeState == TradeState.ACTIVE:
         trade.strategyExit = strategyInstance.lockAndTrailPNL()
+        trade.strategySL = strategyInstance.passStrategySL()
+        logging.info('TradeManager: %s  %f', str(trade.strategyExit), trade.strategySL)
     return
 
   @staticmethod

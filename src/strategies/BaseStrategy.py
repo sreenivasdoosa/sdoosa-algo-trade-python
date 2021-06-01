@@ -2,11 +2,11 @@ import logging
 import time
 from datetime import datetime
 
-from models.ProductType import ProductType
 from core.Quotes import Quotes
+from models.ProductType import ProductType
 from trademgmt.TradeManager import TradeManager
-
 from utils.Utils import Utils
+
 
 class BaseStrategy:
   def __init__(self, name):
@@ -139,3 +139,6 @@ class BaseStrategy:
 
   def lockAndTrailPNL(self):
     return False
+
+  def passStrategySL(self):
+    return 0

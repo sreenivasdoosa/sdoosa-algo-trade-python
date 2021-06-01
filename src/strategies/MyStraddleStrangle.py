@@ -183,7 +183,7 @@ class ShortStraddleStrangleBNF(BaseStrategy):
             strategypnl = TradeManager.getStrategyPNL(self.getName())
             logging.info('%s:Returning Strategy PNL %f %f', self.getName(), strategypnl, self.strategySL)
             if (strategypnl <= self.strategySL):
-                return True
+                return bool(1)
             elif strategypnl > self.strategyTGT:
                 if floor(strategypnl - self.strategyTGT) > self.strategyTrailPLInc:
                     temppnl = int(self.strategyTGTlock + ((floor((strategypnl - self.strategyTGT)
@@ -191,4 +191,8 @@ class ShortStraddleStrangleBNF(BaseStrategy):
                     if (self.strategySL < temppnl):
                         self.strategySL = temppnl
 
-                return False
+                return bool(0)
+            return (bool(0))
+
+    def passStrategySL(self):
+        return self.strategySL

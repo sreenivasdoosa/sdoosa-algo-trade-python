@@ -1,13 +1,15 @@
-import os
 import logging
+import os
+
 from flask import Flask
 
-from config.Config import getBrokerAppConfig, getServerConfig, getSystemConfig
-from restapis.HomeAPI import HomeAPI
+from config.Config import getBrokerAppConfig, getServerConfig
 from restapis.BrokerLoginAPI import BrokerLoginAPI
-from restapis.StartAlgoAPI import StartAlgoAPI
-from restapis.PositionsAPI import PositionsAPI
 from restapis.HoldingsAPI import HoldingsAPI
+from restapis.HomeAPI import HomeAPI
+from restapis.PositionsAPI import PositionsAPI
+from restapis.StartAlgoAPI import StartAlgoAPI
+from utils.Utils import Utils
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -37,7 +39,11 @@ if os.path.exists(logFileDir) == False:
 
 print("Deploy  Directory = " + deployDir)
 print("LogFile Directory = " + logFileDir)
-initLoggingConfg(logFileDir + "/app.log")
+
+intradayLogsDir = os.path.join(logFileDir, Utils.getTodayDateStr())
+if os.path.exists(intradayLogsDir) == False:
+  os.makedirs(intradayLogsDir)
+initLoggingConfg(intradayLogsDir + "/app.log")
 
 logging.info('serverConfig => %s', serverConfig)
 
