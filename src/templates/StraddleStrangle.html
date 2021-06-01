@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta content="ie=edge" http-equiv="X-UA-Compatible"/>
+    <title>
+        Algo Trading - Python
+    </title>
+    <style>
+   .button {
+      background-color: #53a5b0;
+      border: none;
+      padding: 15px 32px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      margin: 4px 2px;
+      cursor: pointer;
+    }
+    .center {
+      text-align: center;
+    }
+
+
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js">
+    </script>
+    <script>
+   function startAlgo() {
+      var url =  "http://localhost:8080" + "/apis/algo/start"
+      var data = {};
+      $.post(url, {},
+        function(data, status, xhr) {
+          if (data.redirect) {
+            window.location.href = data.redirect;
+          } else {
+            alert('status: ' + status + ', data: ' + JSON.stringify(data));
+          }
+        },
+        'json'
+      );
+    }
+
+
+    </script>
+</head>
+<meta content="10" http-equiv="refresh"/>
+<br/>
+<div>
+    Main Summary
+</div>
+<br/>
+<table border="1">
+    <thead>
+    <tr>
+        <th>tradingSymbol</th>
+        <th>direction</th>
+        <th>qty</th>
+        <th>entry</th>
+        <th>initialStopLoss</th>
+        <th>stopLoss</th>
+        <th>cmp</th>
+        <th>pnl</th>
+        <th>pnlPercentage</th>
+        <th>exit</th>
+        <th>exitReason</th>
+        <th>tradeState</th>
+        <th>strategySL</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>BANKNIFTY2160335700CE</td>
+        <td>SHORT</td>
+        <td>50</td>
+        <td>298.8</td>
+        <td>388.35</td>
+        <td>291.3</td>
+        <td>206.7</td>
+        <td>4605.0</td>
+        <td>30.82</td>
+        <td>206.7</td>
+        <td>SL CANCELLED</td>
+        <td>completed</td>
+        <td>-13500</td>
+    </tr>
+    <tr>
+        <td>BANKNIFTY2160335700PE</td>
+        <td>SHORT</td>
+        <td>50</td>
+        <td>329.475</td>
+        <td>429.5</td>
+        <td>429.5</td>
+        <td>429.15</td>
+        <td>-5001.25</td>
+        <td>-30.36</td>
+        <td>429.5</td>
+        <td>SL HIT</td>
+        <td>completed</td>
+        <td>0</td>
+    </tr>
+    <tr>
+        <td>BANKNIFTY2160336100CE</td>
+        <td>SHORT</td>
+        <td>100</td>
+        <td>137.0375</td>
+        <td>178.4</td>
+        <td>133.8</td>
+        <td>83.8</td>
+        <td>5323.75</td>
+        <td>38.85</td>
+        <td>83.8</td>
+        <td>SL CANCELLED</td>
+        <td>completed</td>
+        <td>-13500</td>
+    </tr>
+    <tr>
+        <td>BANKNIFTY2160335300PE</td>
+        <td>SHORT</td>
+        <td>100</td>
+        <td>172.8</td>
+        <td>225.95</td>
+        <td>225.95</td>
+        <td>228.2</td>
+        <td>-5385.0</td>
+        <td>-31.16</td>
+        <td>226.65</td>
+        <td>SL HIT</td>
+        <td>completed</td>
+        <td>0</td>
+    </tr>
+    </tbody>
+</table>
+<br/>
+<div>
+    Placed Order Summary
+</div>
+<br/>
+<table border="1">
+    <thead>
+    <tr>
+        <th>tradingSymbol</th>
+        <th>exchange</th>
+        <th>productType</th>
+        <th>orderType</th>
+        <th>price</th>
+        <th>triggerPrice</th>
+        <th>qty</th>
+        <th>orderId</th>
+        <th>orderStatus</th>
+        <th>averagePrice</th>
+        <th>filledQty</th>
+        <th>pendingQty</th>
+        <th>orderPlaceTimestamp</th>
+        <th>lastOrderUpdateTimestamp</th>
+        <th>message</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>BANKNIFTY2160335700CE</td>
+        <td>NSE</td>
+        <td>MIS</td>
+        <td>MARKET</td>
+        <td>0</td>
+        <td>0</td>
+        <td>50</td>
+        <td>210601001026764</td>
+        <td>COMPLETE</td>
+        <td>298.8</td>
+        <td>50</td>
+        <td>0</td>
+        <td>1622520901</td>
+        <td>1622520901</td>
+        <td>None</td>
+    </tr>
+    <tr>
+        <td>BANKNIFTY2160335700PE</td>
+        <td>NSE</td>
+        <td>MIS</td>
+        <td>MARKET</td>
+        <td>0</td>
+        <td>0</td>
+        <td>50</td>
+        <td>210601001026731</td>
+        <td>COMPLETE</td>
+        <td>329.475</td>
+        <td>50</td>
+        <td>0</td>
+        <td>1622520901</td>
+        <td>1622520901</td>
+        <td>None</td>
+    </tr>
+    <tr>
+        <td>BANKNIFTY2160336100CE</td>
+        <td>NSE</td>
+        <td>MIS</td>
+        <td>MARKET</td>
+        <td>0</td>
+        <td>0</td>
+        <td>100</td>
+        <td>210601001026802</td>
+        <td>COMPLETE</td>
+        <td>137.0375</td>
+        <td>100</td>
+        <td>0</td>
+        <td>1622520901</td>
+        <td>1622520901</td>
+        <td>None</td>
+    </tr>
+    <tr>
+        <td>BANKNIFTY2160335300PE</td>
+        <td>NSE</td>
+        <td>MIS</td>
+        <td>MARKET</td>
+        <td>0</td>
+        <td>0</td>
+        <td>100</td>
+        <td>210601001026848</td>
+        <td>COMPLETE</td>
+        <td>172.8</td>
+        <td>100</td>
+        <td>0</td>
+        <td>1622520901</td>
+        <td>1622520901</td>
+        <td>None</td>
+    </tr>
+    </tbody>
+</table>
+<br/>
+<div>
+    Sl Order Summary
+</div>
+<br/>
+<table border="1">
+    <thead>
+    <tr>
+        <th>tradingSymbol</th>
+        <th>exchange</th>
+        <th>productType</th>
+        <th>orderType</th>
+        <th>price</th>
+        <th>triggerPrice</th>
+        <th>qty</th>
+        <th>orderId</th>
+        <th>orderStatus</th>
+        <th>averagePrice</th>
+        <th>filledQty</th>
+        <th>pendingQty</th>
+        <th>orderPlaceTimestamp</th>
+        <th>lastOrderUpdateTimestamp</th>
+        <th>message</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>BANKNIFTY2160335700CE</td>
+        <td>NSE</td>
+        <td>MIS</td>
+        <td>SL_MARKET</td>
+        <td>0</td>
+        <td>291.3</td>
+        <td>50</td>
+        <td>210601001030864</td>
+        <td>CANCELLED</td>
+        <td>0</td>
+        <td>0</td>
+        <td>50</td>
+        <td>1622520914</td>
+        <td>1622528205</td>
+        <td>None</td>
+    </tr>
+    <tr>
+        <td>BANKNIFTY2160335700PE</td>
+        <td>NSE</td>
+        <td>MIS</td>
+        <td>SL_MARKET</td>
+        <td>0</td>
+        <td>429.5</td>
+        <td>50</td>
+        <td>210601001030898</td>
+        <td>COMPLETE</td>
+        <td>429.5</td>
+        <td>50</td>
+        <td>0</td>
+        <td>1622520914</td>
+        <td>1622520914</td>
+        <td>None</td>
+    </tr>
+    <tr>
+        <td>BANKNIFTY2160336100CE</td>
+        <td>NSE</td>
+        <td>MIS</td>
+        <td>SL_MARKET</td>
+        <td>0</td>
+        <td>133.8</td>
+        <td>100</td>
+        <td>210601001030923</td>
+        <td>CANCELLED</td>
+        <td>0</td>
+        <td>0</td>
+        <td>100</td>
+        <td>1622520914</td>
+        <td>1622526215</td>
+        <td>None</td>
+    </tr>
+    <tr>
+        <td>BANKNIFTY2160335300PE</td>
+        <td>NSE</td>
+        <td>MIS</td>
+        <td>SL_MARKET</td>
+        <td>0</td>
+        <td>225.95</td>
+        <td>100</td>
+        <td>210601001030960</td>
+        <td>COMPLETE</td>
+        <td>226.65</td>
+        <td>100</td>
+        <td>0</td>
+        <td>1622520914</td>
+        <td>1622520914</td>
+        <td>None</td>
+    </tr>
+    </tbody>
+</table>
+<div>
+    END
+</div>
+</html>

@@ -30,9 +30,16 @@ def getTimestampsData():
   timestamps = json.loads(timestampsFile.read())
   return timestamps
 
-def saveTimestampsData(timestamps = {}):
+
+def saveTimestampsData(timestamps={}):
   serverConfig = getServerConfig()
   timestampsFilePath = os.path.join(serverConfig['deployDir'], 'timestamps.json')
   with open(timestampsFilePath, 'w') as timestampsFile:
     json.dump(timestamps, timestampsFile, indent=2)
   print("saved timestamps data to file " + timestampsFilePath)
+
+
+def getTVloginConfig():
+  with open('../config/tvcred.json', 'r') as system:
+    jsonSystemData = json.load(system)
+    return jsonSystemData

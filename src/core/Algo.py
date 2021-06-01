@@ -3,14 +3,12 @@ import threading
 import time
 
 from instruments.Instruments import Instruments
+from strategies.MyStraddleStrangle import ShortStraddleStrangleBNF
+from tickertv.NF_BNF_1minTicker import indexTicker
 from trademgmt.TradeManager import TradeManager
 
-from strategies.SampleStrategy import SampleStrategy
-from strategies.BNFORB30Min import BNFORB30Min
-from strategies.OptionSelling import OptionSelling
-from strategies.MyStraddleStrangle import ShortStraddleStrangleBNF
 
-#from Test import Test
+# from Test import Test
 
 class Algo:
   isAlgoRunning = None
@@ -36,6 +34,7 @@ class Algo:
     #threading.Thread(target=BNFORB30Min.getInstance().run).start()
     #threading.Thread(target=OptionSelling.getInstance().run).start()
     threading.Thread(target=ShortStraddleStrangleBNF.getInstance().run).start()
+    threading.Thread(target=indexTicker.run).start()
     
     Algo.isAlgoRunning = True
     logging.info("Algo started.")
