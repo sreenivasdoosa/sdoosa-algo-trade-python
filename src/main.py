@@ -41,8 +41,10 @@ print("Deploy  Directory = " + deployDir)
 print("LogFile Directory = " + logFileDir)
 
 intradayLogsDir = os.path.join(logFileDir, Utils.getTodayDateStr())
+
 if os.path.exists(intradayLogsDir) == False:
   os.makedirs(intradayLogsDir)
+  print("LogFile Directory = " + intradayLogsDir)
 initLoggingConfg(intradayLogsDir + "/app.log")
 
 logging.info('serverConfig => %s', serverConfig)

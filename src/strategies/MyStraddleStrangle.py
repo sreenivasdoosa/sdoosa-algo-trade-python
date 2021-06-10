@@ -67,6 +67,8 @@ class ShortStraddleStrangleBNF(BaseStrategy):
         # Get current market price of Nifty Future
         futureSymbol = Utils.prepareMonthlyExpiryFuturesSymbol('BANKNIFTY')
         quote = self.getQuote(futureSymbol)
+        # quote = self.getQuote('NIFTY BANK') # Taken SPOT Price for ATM
+        # quote = Quotes.getQuote("NIFTY BANK",False) # Taken SPOT Price for ATM False for NSE True for NFO
         if quote == None:
             logging.error('%s: Could not get quote for %s', self.getName(), futureSymbol)
             return
@@ -185,11 +187,11 @@ class ShortStraddleStrangleBNF(BaseStrategy):
             if (strategypnl <= self.strategySL):
                 return bool(1)
             elif strategypnl > self.strategyTGT:
-                if floor(strategypnl - self.strategyTGT) > self.strategyTrailPLInc:
-                    temppnl = int(self.strategyTGTlock + ((floor((strategypnl - self.strategyTGT)
-                                                                 / self.strategyTrailPLInc)) * self.strategyTrailPLstep))
-                    if (self.strategySL < temppnl):
-                        self.strategySL = temppnl
+                # if floor(strategypnl - self.strategyTGT) > self.strategyTrailPLInc:
+                temppnl = int(self.strategyTGTlock + ((floor((strategypnl - self.strategyTGT)
+                                                             / self.strategyTrailPLInc)) * self.strategyTrailPLstep))
+                if (self.strategySL < temppnl):
+                    self.strategySL = temppnl
 
                 return bool(0)
             return (bool(0))

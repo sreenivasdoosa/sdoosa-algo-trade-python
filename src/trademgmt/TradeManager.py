@@ -239,7 +239,8 @@ class TradeManager:
           nowEpoch = Utils.getEpoch()
           if nowEpoch >= trade.intradaySquareOffTimestamp:
             TradeManager.squareOffTrade(trade, TradeExitReason.SQUARE_OFF)
-        elif trade.strategyExit == True:
+          if trade.strategyExit == True:
+            logging.info('TradeManager: Trailing PNL Hit...')
             TradeManager.squareOffTrade(trade, TradeExitReason.STRATEGY_TSL_HIT)
 
   @staticmethod
@@ -298,7 +299,8 @@ class TradeManager:
         continue
       if trade.tradeState == TradeState.CREATED or trade.tradeState == TradeState.DISABLED:
         continue
-      pnl_l = pnl_l+trade.pnl
+      pnl_l = pnl_l + trade.pnl
+      trade.strategyCurrentPNL = pnl_l
     return pnl_l
 
   @staticmethod
@@ -307,7 +309,7 @@ class TradeManager:
       strategyInstance = TradeManager.strategyToInstanceMap[trade.strategy]
       if strategyInstance == None:
         continue
-      if trade.tradeState == TradeState.ACTIVE:
+      if trade.tradeState == TradeState.ACTIVE and trade.strategyExit == False:
         trade.strategyExit = strategyInstance.lockAndTrailPNL()
         trade.strategySL = strategyInstance.passStrategySL()
         logging.info('TradeManager: %s  %f', str(trade.strategyExit), trade.strategySL)

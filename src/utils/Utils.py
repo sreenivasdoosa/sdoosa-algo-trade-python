@@ -1,19 +1,20 @@
+import calendar
+import logging
 import math
 import os
-import uuid
-import logging
-import calendar
-import json
-from json2html import *
-from bs4 import BeautifulSoup
-import pandas as pd
 import time
+import uuid
 from datetime import datetime, timedelta
-from config.Config import getServerConfig
+
+import pandas as pd
+from bs4 import BeautifulSoup
+from json2html import *
 
 from config.Config import getHolidays
+from config.Config import getServerConfig
 from models.Direction import Direction
 from trademgmt.TradeState import TradeState
+
 
 class Utils:
   dateFormat = "%Y-%m-%d"
@@ -253,7 +254,7 @@ class Utils:
     if (not (datapd.empty)):
       datasummary = datapd[
         ['tradingSymbol', "direction", "qty", 'entry', "initialStopLoss", "stopLoss", "cmp", "pnl", "pnlPercentage",
-         "exit", "exitReason","tradeState","strategySL"]]
+         "exit", "exitReason", "tradeState", "strategyCurrentPNL", "strategySL"]]
       # Get indexes where name column has value john
       indexNames = datasummary[datasummary['tradeState'] == 'disabled'].index
       # Delete these row indexes from dataFrame

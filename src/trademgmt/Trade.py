@@ -1,9 +1,7 @@
-import logging
-
-from trademgmt.TradeState import TradeState
 from models.ProductType import ProductType
-
+from trademgmt.TradeState import TradeState
 from utils.Utils import Utils
+
 
 class Trade:
   def __init__(self, tradingSymbol = None):
@@ -13,25 +11,25 @@ class Trade:
     self.strategy = ""
     self.direction = ""
     self.productType = ProductType.MIS
-    self.isFutures = False # Futures trade
-    self.isOptions = False # Options trade
-    self.optionType = None # CE/PE. Applicable only if isOptions is True
-    self.placeMarketOrder = False # True means place the entry order with Market Order Type
-    self.intradaySquareOffTimestamp = None # Can be strategy specific. Some can square off at 15:00:00 some can at 15:15:00 etc.
+    self.isFutures = False  # Futures trade
+    self.isOptions = False  # Options trade
+    self.optionType = None  # CE/PE. Applicable only if isOptions is True
+    self.placeMarketOrder = False  # True means place the entry order with Market Order Type
+    self.intradaySquareOffTimestamp = None  # Can be strategy specific. Some can square off at 15:00:00 some can at 15:15:00 etc.
 
-    self.strategySL = 0 #Set the strategy level SL.
-    self.strategyCurrentSL = 0
-    self.strategyTGT = 0 # Will be the reference for lock and trail SL
-    self.strategyTGTlock=0 #MInimum Amount to be locked if PNL hit strategyTGT
-    self.strategyTrailPL =0 # Similar to Stockmock
+    self.strategySL = 0  # Set the strategy level SL.
+    self.strategyCurrentPNL = 0
+    self.strategyTGT = 0  # Will be the reference for lock and trail SL
+    self.strategyTGTlock = 0  # MInimum Amount to be locked if PNL hit strategyTGT
+    self.strategyTrailPL = 0  # Similar to Stockmock
     self.strategyTrailInc = 0  # Similar to Stockmock
-    self.strategyTrailPLstep = 0 # Similar to Stockmock
-    self.strategyTSL=False
+    self.strategyTrailPLstep = 0  # Similar to Stockmock
+    self.strategyTSL = False
     self.strategyTSLenable = False
-    self.strategyExit=False
+    self.strategyExit = False
 
-    self.requestedEntry = 0 # Requested entry
-    self.entry = 0 # Actual entry. This will be different from requestedEntry if the order placed is Market order
+    self.requestedEntry = 0  # Requested entry
+    self.entry = 0  # Actual entry. This will be different from requestedEntry if the order placed is Market order
     self.qty = 0 # Requested quantity
     self.filledQty = 0 # In case partial fill qty is not equal to filled quantity
     self.initialStopLoss = 0 # Initial stop loss

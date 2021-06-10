@@ -1,5 +1,7 @@
 import logging
 import os
+import socket
+import struct
 import time
 
 from tvDatafeed import TvDatafeed, Interval
@@ -28,8 +30,13 @@ class indexTicker:
         # #testing...
         # time.sleep(60.0 - ((time.time()) % 60.0))
         # track and update ticks in a loop
+        time.sleep((60.0 - ((indexTicker.RequestTimefromNtp()) % 60.0)) + 4)
+        print(time.ctime())
+        counter = 0
         while True:
-            if Utils.isMarketClosedForTheDay():
+            if Utils.isMarketClosedForTheDay() and (counter == 0):  # counter to ensure 3:30 candle is recorded.
+                counter = 1
+            elif Utils.isMarketClosedForTheDay() and (counter == 1):
                 logging.info('indexTicker: Stopping as market closed.')
                 break
             try:
@@ -42,14 +49,14 @@ class indexTicker:
                 indexTicker.logCSV(bankniftySpot, "BANKNIFTY", dir)
                 indexTicker.logCSV(bankniftyFut, "BANKNIFTY1", dir)
                 logging.info('indexTicker: logged 1min ticker....%s', time.asctime(time.localtime(time.time())))
-                time.sleep(60.0 - ((time.time()) % 60.0))
+                time.sleep((60.0 - ((time.time()) % 60.0)) + 2)
             except Exception as e:
                 logging.exception("indexTicker: Main thread exemption")
 
     @staticmethod
     def tvTickerhist(tv, symbol, interval):
         if (interval == "1min"):
-            data = tv.get_hist(symbol=symbol, exchange='NSE', interval=Interval.in_1_minute, n_bars=1)
+            data = tv.get_hist(symbol=symbol, exchange='NSE', interval=Interval.in_1_minute, n_bars=2)
         return data
 
     @staticmethod
@@ -60,6 +67,7 @@ class indexTicker:
         data.drop("datetime", axis='columns', inplace=True)
         data['symbol'] = data['symbol'].str.replace('NSE:', '')
         data = data[["date", "time", "symbol", "open", "high", "low", "close", "volume"]]
+        data = data[data.index.isin([0, 0])]  # consider only the last 1min array
         data.to_csv(dir + "/" + file + ".csv", index=False, header=False, mode='a')
 
     @staticmethod
@@ -71,3 +79,15 @@ class indexTicker:
                          intradayTradesDir)
             os.makedirs(intradayTradesDir)
         return intradayTradesDir
+
+    @staticmethod
+    def RequestTimefromNtp(addr='time.windows.com'):
+        REF_TIME_1970 = 2208988800  # Reference time
+        client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        data = b'\x1b' + 47 * b'\0'
+        client.sendto(data, (addr, 123))
+        data, address = client.recvfrom(1024)
+        if data:
+            t = struct.unpack('!12I', data)[10]
+            t -= REF_TIME_1970
+        return t
