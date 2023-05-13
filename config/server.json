@@ -1,7 +1,7 @@
 {
-  "port": 8080,
+  "port": 5000,
   "enableSSL": false,
   "sslPort": 8443,
-  "deployDir": "D:/temp/python-deploy",
-  "logFileDir": "D:/temp/python-deploy/logs"
+  "deployDir": "/Users/zeel/algo-trading-python/deployment",
+  "logFileDir": "/Users/zeel/algo-trading-python/deployment/logs"
 }

@@ -5,8 +5,8 @@ from config.Config import getSystemConfig
 from loginmgmt.BaseLogin import BaseLogin
 
 class ZerodhaLogin(BaseLogin):
-  def __init__(self, brokerAppDetails):
-    BaseLogin.__init__(self, brokerAppDetails)
+  def __init__(self, brokerAppDetails,kwargs=None):
+    BaseLogin.__init__(self, brokerAppDetails,kwargs)
 
   def login(self, args):
     logging.info('==> ZerodhaLogin .args => %s', args);

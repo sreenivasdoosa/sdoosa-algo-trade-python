@@ -3,12 +3,13 @@ import logging
 from config.Config import getBrokerAppConfig
 from models.BrokerAppDetails import BrokerAppDetails
 from loginmgmt.ZerodhaLogin import ZerodhaLogin
+from loginmgmt.AngelOneLogin import AngelOneLogin
 
 class Controller:
   brokerLogin = None # static variable
   brokerName = None # static variable
 
-  def handleBrokerLogin(args):
+  def handleBrokerLogin(args,kwargs):
     brokerAppConfig = getBrokerAppConfig()
 
     brokerAppDetails = BrokerAppDetails(brokerAppConfig['broker'])
@@ -16,13 +17,16 @@ class Controller:
     brokerAppDetails.setAppKey(brokerAppConfig['appKey'])
     brokerAppDetails.setAppSecret(brokerAppConfig['appSecret'])
 
+    logging.info('handleBrokerLogin kwargs %s', kwargs)
+    broker = kwargs['broker']
     logging.info('handleBrokerLogin appKey %s', brokerAppDetails.appKey)
-    Controller.brokerName = brokerAppDetails.broker
+    logging.info('broker name %s', broker)
+    Controller.brokerName = broker
     if Controller.brokerName == 'zerodha':
       Controller.brokerLogin = ZerodhaLogin(brokerAppDetails)
     # Other brokers - not implemented
-    #elif Controller.brokerName == 'fyers':
-      #Controller.brokerLogin = FyersLogin(brokerAppDetails)
+    elif Controller.brokerName == 'angel':
+      Controller.brokerLogin = AngelOneLogin(brokerAppDetails,kwargs)
 
     redirectUrl = Controller.brokerLogin.login(args)
     return redirectUrl
