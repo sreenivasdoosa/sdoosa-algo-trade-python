@@ -11,20 +11,21 @@ class Controller:
 
   def handleBrokerLogin(args,kwargs):
     broker = kwargs['broker']
-    brokerAppConfig = getBrokerAppConfig()
-    brokerAppDetails = BrokerAppDetails(broker)
-    brokerAppDetails.setAppKey(brokerAppConfig['appKey'])
-    brokerAppDetails.setAppSecret(brokerAppConfig['appSecret'])
-
-    logging.info('handleBrokerLogin kwargs %s', kwargs)
-    logging.info('handleBrokerLogin appKey %s', brokerAppDetails.appKey)
     logging.info('broker name %s', broker)
     Controller.brokerName = broker
+    brokerAppConfig = getBrokerAppConfig()[broker]
+    logging.info('handleBrokerLogin kwargs %s', kwargs)
+    
     if Controller.brokerName == 'zerodha':
+      brokerAppDetails = BrokerAppDetails(broker)
+      brokerAppDetails.setAppKey(brokerAppConfig['appKey'])
+      brokerAppDetails.setAppSecret(brokerAppConfig['appSecret'])
       brokerAppDetails.setClientID(brokerAppConfig['clientID'])
       Controller.brokerLogin = ZerodhaLogin(brokerAppDetails)
     #For AngelOne broker
     elif Controller.brokerName == 'angel':
+      brokerAppDetails = BrokerAppDetails(broker)
+      brokerAppDetails.setAppKey(brokerAppConfig['appKey'])
       brokerAppDetails.setClientID(kwargs['clientId'])
       brokerAppDetails.setPassword(kwargs['password'])
       brokerAppDetails.setTOTP(kwargs['totp'])

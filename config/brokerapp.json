@@ -1,6 +1,22 @@
 {
-  "clientID": "dummy",
-  "appKey": "dummy",
-  "appSecret": "dummy",
-  "redirectUrl": "http://localhost:5000/apis/broker/login/angel"
+  "zerodha":{
+    "clientID": "dummy",
+    "appKey": "dummy",
+    "appSecret": "dummy",
+    "redirectUrl": "http://localhost:5000/apis/broker/login/zerodha",
+    "instrumentKeys":{
+      "tradingSymbol":"tradingSymbol",
+      "instrumentToken":"instrument_token"
+    }
+  },
+  "angel":{
+    "clientID": "dummy",
+    "appKey": "dummy",
+    "appSecret": "dummy",
+    "redirectUrl": "http://localhost:5000/apis/broker/login/angel",
+    "instrumentKeys":{
+      "tradingSymbol":"symbol",
+      "instrumentToken":"token"
+    }
+  }
 }
