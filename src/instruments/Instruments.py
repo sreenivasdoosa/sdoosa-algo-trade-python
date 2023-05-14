@@ -2,7 +2,7 @@ import os
 import logging
 import json
 
-from config.Config import getServerConfig, getTimestampsData, saveTimestampsData, getBrokerAppConfig
+from config.Config import getServerConfig, getTimestampsData, saveTimestampsData
 from core.Controller import Controller
 from utils.Utils import Utils
 
@@ -84,14 +84,12 @@ class Instruments:
       logging.error("Could not fetch/load instruments data. Hence exiting the app.");
       exit(-2)
     
-    brokerName = Controller.getBrokerName()
-    brokerAppConfig = getBrokerAppConfig()[brokerName]
-    
+    brokerAppDetails = Controller.getBrokerAppDetails()
     Instruments.symbolToInstrumentMap = {}
     Instruments.tokenToInstrumentMap = {}
     for isd in instrumentsList:
-      tradingSymbol = isd[brokerAppConfig["instrumentKeys"]['tradingSymbol']]
-      instrumentToken = isd[brokerAppConfig["instrumentKeys"]['instrumentToken']]
+      tradingSymbol = isd[brokerAppDetails.instrumentKeys.tradingSymbol]
+      instrumentToken = isd[brokerAppDetails.instrumentKeys.instrumentToken]
       # logging.info('%s = %d', tradingSymbol, instrumentToken)
       Instruments.symbolToInstrumentMap[tradingSymbol] = isd
       Instruments.tokenToInstrumentMap[instrumentToken] = isd
