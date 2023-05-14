@@ -3,26 +3,32 @@ import logging
 from config.Config import getBrokerAppConfig
 from models.BrokerAppDetails import BrokerAppDetails
 from loginmgmt.ZerodhaLogin import ZerodhaLogin
+from loginmgmt.AngelOneLogin import AngelOneLogin
 
 class Controller:
   brokerLogin = None # static variable
   brokerName = None # static variable
 
-  def handleBrokerLogin(args):
+  def handleBrokerLogin(args,kwargs):
+    broker = kwargs['broker']
     brokerAppConfig = getBrokerAppConfig()
-
-    brokerAppDetails = BrokerAppDetails(brokerAppConfig['broker'])
-    brokerAppDetails.setClientID(brokerAppConfig['clientID'])
+    brokerAppDetails = BrokerAppDetails(broker)
     brokerAppDetails.setAppKey(brokerAppConfig['appKey'])
     brokerAppDetails.setAppSecret(brokerAppConfig['appSecret'])
 
+    logging.info('handleBrokerLogin kwargs %s', kwargs)
     logging.info('handleBrokerLogin appKey %s', brokerAppDetails.appKey)
-    Controller.brokerName = brokerAppDetails.broker
+    logging.info('broker name %s', broker)
+    Controller.brokerName = broker
     if Controller.brokerName == 'zerodha':
+      brokerAppDetails.setClientID(brokerAppConfig['clientID'])
       Controller.brokerLogin = ZerodhaLogin(brokerAppDetails)
-    # Other brokers - not implemented
-    #elif Controller.brokerName == 'fyers':
-      #Controller.brokerLogin = FyersLogin(brokerAppDetails)
+    #For AngelOne broker
+    elif Controller.brokerName == 'angel':
+      brokerAppDetails.setClientID(kwargs['clientId'])
+      brokerAppDetails.setPassword(kwargs['password'])
+      brokerAppDetails.setTOTP(kwargs['totp'])
+      Controller.brokerLogin = AngelOneLogin(brokerAppDetails)
 
     redirectUrl = Controller.brokerLogin.login(args)
     return redirectUrl

@@ -1,7 +1,6 @@
 {
-  "broker": "zerodha",
   "clientID": "dummy",
   "appKey": "dummy",
   "appSecret": "dummy",
-  "redirectUrl": "http://localhost:8080/apis/broker/login/zerodha"
+  "redirectUrl": "http://localhost:5000/apis/broker/login/angel"
 }
