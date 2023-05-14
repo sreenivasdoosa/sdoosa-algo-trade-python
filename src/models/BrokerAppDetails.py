@@ -19,3 +19,16 @@ class BrokerAppDetails:
   def setTOTP(self, totp):
     self.totp = totp
 
+  def setInstrumentKeys(self, instrumentKeys):
+    self.instrumentKeys = instrumentKeys
+
+  class InstrumentKeys:
+    def __init__(self):
+      None
+
+    def setTradingSymbol(self, tradingSymbol):
+      self.tradingSymbol = tradingSymbol
+
+    def setInstrumentToken(self, instrumentToken):
+      self.instrumentToken = instrumentToken 
+

@@ -8,6 +8,7 @@ from loginmgmt.AngelOneLogin import AngelOneLogin
 class Controller:
   brokerLogin = None # static variable
   brokerName = None # static variable
+  brokerAppDetails = None
 
   def handleBrokerLogin(args,kwargs):
     broker = kwargs['broker']
@@ -21,7 +22,13 @@ class Controller:
       brokerAppDetails.setAppKey(brokerAppConfig['appKey'])
       brokerAppDetails.setAppSecret(brokerAppConfig['appSecret'])
       brokerAppDetails.setClientID(brokerAppConfig['clientID'])
+      
+      instrumentKeys = BrokerAppDetails.InstrumentKeys()
+      instrumentKeys.setTradingSymbol(brokerAppConfig['instrumentKeys']['tradingSymbol'])
+      instrumentKeys.setInstrumentToken(brokerAppConfig['instrumentKeys']['instrumentToken'])
+      brokerAppDetails.setInstrumentKeys(instrumentKeys)
       Controller.brokerLogin = ZerodhaLogin(brokerAppDetails)
+      Controller.brokerAppDetails = brokerAppDetails
     #For AngelOne broker
     elif Controller.brokerName == 'angel':
       brokerAppDetails = BrokerAppDetails(broker)
@@ -29,8 +36,13 @@ class Controller:
       brokerAppDetails.setClientID(kwargs['clientId'])
       brokerAppDetails.setPassword(kwargs['password'])
       brokerAppDetails.setTOTP(kwargs['totp'])
+      instrumentKeys = BrokerAppDetails.InstrumentKeys()
+      instrumentKeys.setTradingSymbol(brokerAppConfig['instrumentKeys']['tradingSymbol'])
+      instrumentKeys.setInstrumentToken(brokerAppConfig['instrumentKeys']['instrumentToken'])
+      brokerAppDetails.setInstrumentKeys(instrumentKeys)
       Controller.brokerLogin = AngelOneLogin(brokerAppDetails)
-
+      Controller.brokerAppDetails = brokerAppDetails
+      
     redirectUrl = Controller.brokerLogin.login(args)
     return redirectUrl
 
@@ -39,3 +51,6 @@ class Controller:
 
   def getBrokerName():
     return Controller.brokerName
+
+  def getBrokerAppDetails():
+    return Controller.brokerAppDetails
