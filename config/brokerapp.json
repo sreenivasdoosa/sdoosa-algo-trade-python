@@ -11,7 +11,7 @@
   },
   "angel":{
     "clientID": "dummy",
-    "appKey": "8jDcTCdo",
+    "appKey": "dummy",
     "appSecret": "dummy",
     "redirectUrl": "http://localhost:5000/apis/broker/login/angel",
     "instrumentKeys":{
