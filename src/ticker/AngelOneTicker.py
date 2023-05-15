@@ -14,7 +14,7 @@ class AngelOneTicker(BaseTicker):
 
   def startTicker(self):
     brokerAppDetails = self.brokerLogin.getBrokerAppDetails()
-    feedToken = self.brokerLogin.getFeedToken()
+    feedToken = self.brokerLogin.getBrokerHandle().getFeedToken()
     if feedToken == None:
       logging.error('AngelOneTicker startTicker: Cannot start ticker as feedToken is empty')
       return

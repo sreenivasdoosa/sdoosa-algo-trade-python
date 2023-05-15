@@ -15,7 +15,7 @@ class AngelOneLogin(BaseLogin):
     redirectUrl = None
     session = brokerHandle.generateSession(self.brokerAppDetails.clientID,self.brokerAppDetails.password,self.brokerAppDetails.totp)
     logging.info('AngelOneLogin session = %s', session)
-    accessToken = session['data']['jwtToken']
+    accessToken = brokerHandle.getAccessToken()
     logging.info('AngelOneLogin Login successful. accessToken = %s', accessToken)
 
     # set broker handle and access token to the instance
@@ -27,6 +27,5 @@ class AngelOneLogin(BaseLogin):
     logging.info('AngelOneLogin Redirecting to home page %s', homeUrl)
     redirectUrl = homeUrl
     
-
     return redirectUrl
 
