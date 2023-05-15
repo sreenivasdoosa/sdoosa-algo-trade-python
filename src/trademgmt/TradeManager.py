@@ -7,6 +7,7 @@ from datetime import datetime
 from config.Config import getServerConfig
 from core.Controller import Controller
 from ticker.ZerodhaTicker import ZerodhaTicker
+from ticker.AngelOneTicker import AngelOneTicker
 from trademgmt.Trade import Trade
 from trademgmt.TradeState import TradeState
 from trademgmt.TradeExitReason import TradeExitReason
@@ -53,8 +54,8 @@ class TradeManager:
     brokerName = Controller.getBrokerName()
     if brokerName == "zerodha":
       TradeManager.ticker = ZerodhaTicker()
-    #elif brokerName == "fyers" # not implemented
-    # ticker = FyersTicker()
+    elif brokerName == "angel":
+      TradeManager.ticker = AngelOneTicker()
 
     TradeManager.ticker.startTicker()
     TradeManager.ticker.registerListener(TradeManager.tickerListener)
