@@ -26,7 +26,7 @@ class SampleStrategy(BaseStrategy):
     super().__init__("SAMPLE")
     # Initialize all the properties specific to this strategy
     self.productType = ProductType.MIS
-    self.symbols = ["SBIN", "INFY", "TATASTEEL", "RELIANCE", "HDFCBANK", "CIPLA"]
+    self.symbols = ["SBIN-EQ", "INFY-EQ", "TATASTEEL-EQ", "RELIANCE-EQ", "HDFCBANK-EQ", "CIPLA-EQ"]
     self.slPercentage = 1.1
     self.targetPercentage = 2.2
     self.startTimestamp = Utils.getTimeOfToDay(9, 30, 0) # When to start the strategy. Default is Market start time

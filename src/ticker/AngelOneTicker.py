@@ -19,7 +19,7 @@ class AngelOneTicker(BaseTicker):
       logging.error('AngelOneTicker startTicker: Cannot start ticker as feedToken is empty')
       return
     
-    ticker = SmartWebSocket(brokerAppDetails.clientID, feedToken)
+    ticker = SmartWebSocket(feedToken, brokerAppDetails.clientID)
     ticker._on_open = self.on_connect
     ticker._on_close = self.on_close
     ticker._on_error = self.on_error
@@ -28,7 +28,7 @@ class AngelOneTicker(BaseTicker):
     logging.info('AngelOneTicker: Going to connect..')
     self.brokerAppDetails = brokerAppDetails
     self.ticker = ticker
-    self.ticker.connect(threaded=True)
+    self.ticker.connect()
 
   def stopTicker(self):
     logging.info('AngelOneTicker: stopping..')
@@ -44,7 +44,7 @@ class AngelOneTicker(BaseTicker):
 
     messageTokens = "&".join(f'"{s}"' for s in tokens)
     logging.info('AngelOneTicker Subscribing token %s', messageTokens)
-    self.ticker.subscribe(messageToken)
+    self.ticker.subscribe('mw',messageTokens)
 
   def unregisterSymbols(self, symbols):
     tokens = []
@@ -56,12 +56,15 @@ class AngelOneTicker(BaseTicker):
 
     messageTokens = "&".join(f'"{s}"' for s in tokens)
     logging.info('AngelOneTicker Unsubscribing tokens %s', messageTokens)
-    self.ticker.subscribe(tokens)
+    self.ticker.subscribe('mw',messageTokens)
 
   def on_ticks(self, ws, brokerTicks):
+    logging.info('on_ticks message = %s', brokerTicks)
     # convert broker specific Ticks to our system specific Ticks (models.TickData) and pass to super class function
     ticks = []
     for bTick in brokerTicks:
+      if 'ts' not in bTick:
+        return
       tradingSymbol = bTick['ts']
       tick = TickData(tradingSymbol)
       tick.lastTradedPrice = bTick['ltp']
@@ -79,14 +82,14 @@ class AngelOneTicker(BaseTicker):
       
     self.onNewTicks(ticks)
 
-  def on_connect(self, ws, response):
+  def on_connect(self, ws):
     self.onConnect()
 
-  def on_close(self, ws, code, reason):
-    self.onDisconnect(code, reason)
+  def on_close(self, ws):
+    self.onDisconnect(0, "Closing.")
 
-  def on_error(self, ws, code, reason):
-    self.onError(code, reason)
+  def on_error(self, ws, error):
+    self.onError(0, error)
 
   def on_reconnect(self, ws, attemptsCount):
     self.onReconnect(attemptsCount)
@@ -101,4 +104,4 @@ class AngelOneTicker(BaseTicker):
     return self._getExchangeMapping(instrument['exch_seg'])+"|"+instrument[self.brokerAppDetails.instrumentKeys.instrumentToken]
 
   def _getExchangeMapping(self, exchange):
-    return EXCHANGE_MAPPING[exchange]
+    return self.EXCHANGE_MAPPING[exchange]

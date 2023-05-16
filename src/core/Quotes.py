@@ -2,6 +2,7 @@ import logging
 
 from core.Controller import Controller
 from models.Quote import Quote
+from instruments.Instruments import Instruments
 
 class Quotes:
   @staticmethod
@@ -32,9 +33,29 @@ class Quotes:
       quote.oiDayLow = bQuote['oi_day_low']
       quote.lowerCiruitLimit = bQuote['lower_circuit_limit']
       quote.upperCircuitLimit = bQuote['upper_circuit_limit']
-    else:
-      # The logic may be different for other brokers
-      quote = None
+    elif broker == "angel":
+      isd = Instruments.getInstrumentDataBySymbol(tradingSymbol)
+      bQuoteResp = brokerHandle.ltpData(isd['exch_seg'],tradingSymbol,isd['token']) 
+      bQuote = bQuoteResp['data']
+      # convert broker quote to our system quote
+      quote = Quote(tradingSymbol)
+      quote.tradingSymbol = tradingSymbol
+      quote.lastTradedPrice = bQuote['ltp']
+      #quote.lastTradedQuantity = bQuote['last_quantity']
+      #quote.avgTradedPrice = bQuote['average_price']
+      #quote.volume = bQuote['volume']
+      #quote.totalBuyQuantity = bQuote['buy_quantity']
+      #quote.totalSellQuantity = bQuote['sell_quantity']
+      #ohlc = bQuote['ohlc']
+      quote.open = bQuote['open']
+      quote.high = bQuote['high']
+      quote.low = bQuote['low']
+      quote.close = bQuote['close']
+      #quote.change = bQuote['net_change']
+      #quote.oiDayHigh = bQuote['oi_day_high']
+      #quote.oiDayLow = bQuote['oi_day_low']
+      #quote.lowerCiruitLimit = bQuote['lower_circuit_limit']
+      #quote.upperCircuitLimit = bQuote['upper_circuit_limit']
     return quote
 
   @staticmethod
