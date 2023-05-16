@@ -1,6 +1,7 @@
 import logging
 import json
 
+from smartapi.webSocket import WebSocket
 from smartapi import SmartWebSocket
 
 from ticker.BaseTicker import BaseTicker
@@ -24,11 +25,20 @@ class AngelOneTicker(BaseTicker):
     ticker._on_close = self.on_close
     ticker._on_error = self.on_error
     ticker._on_message = self.on_ticks
-  
+    
+    #ticker = WebSocket(feedToken, brokerAppDetails.clientID,debug=True)
+    #ticker.on_connect = self.on_connect
+    #ticker.on_close = self.on_close
+    #ticker.on_error = self.on_error
+    #ticker.on_reconnect = self.on_reconnect
+    #ticker.on_noreconnect = self.on_noreconnect
+    #ticker.on_ticks = self.on_ticks
+
     logging.info('AngelOneTicker: Going to connect..')
     self.brokerAppDetails = brokerAppDetails
     self.ticker = ticker
     self.ticker.connect()
+    #self.ticker.connect(threaded=True,disable_ssl_verification=True)
 
   def stopTicker(self):
     logging.info('AngelOneTicker: stopping..')
@@ -45,6 +55,7 @@ class AngelOneTicker(BaseTicker):
     messageTokens = "&".join(f'"{s}"' for s in tokens)
     logging.info('AngelOneTicker Subscribing token %s', messageTokens)
     self.ticker.subscribe('mw',messageTokens)
+    #self.ticker.send_request(messageTokens,'mw')
 
   def unregisterSymbols(self, symbols):
     tokens = []
@@ -57,28 +68,28 @@ class AngelOneTicker(BaseTicker):
     messageTokens = "&".join(f'"{s}"' for s in tokens)
     logging.info('AngelOneTicker Unsubscribing tokens %s', messageTokens)
     self.ticker.subscribe('mw',messageTokens)
+    #self.ticker.send_request(messageTokens,'mw')
 
   def on_ticks(self, ws, brokerTicks):
     logging.info('on_ticks message = %s', brokerTicks)
     # convert broker specific Ticks to our system specific Ticks (models.TickData) and pass to super class function
     ticks = []
     for bTick in brokerTicks:
-      if 'ts' not in bTick:
-        return
-      tradingSymbol = bTick['ts']
-      tick = TickData(tradingSymbol)
-      tick.lastTradedPrice = bTick['ltp']
-      tick.lastTradedQuantity = bTick['ltq']
-      tick.avgTradedPrice = bTick['ap']
-      tick.volume = bTick['v']
-      tick.totalBuyQuantity = bTick['tbq']
-      tick.totalSellQuantity = bTick['tsq']
-      tick.open = bTick['op']
-      tick.high = bTick['h']
-      tick.low = bTick['lo']
-      tick.close = bTick['c']
-      tick.change = bTick['cng']
-      ticks.append(tick)
+      if 'ts' in bTick:
+        tradingSymbol = bTick['ts']
+        tick = TickData(tradingSymbol)
+        tick.lastTradedPrice = bTick['ltp']
+        tick.lastTradedQuantity = bTick['ltq']
+        tick.avgTradedPrice = bTick['ap']
+        tick.volume = bTick['v']
+        tick.totalBuyQuantity = bTick['tbq']
+        tick.totalSellQuantity = bTick['tsq']
+        tick.open = bTick['op']
+        tick.high = bTick['h']
+        tick.low = bTick['lo']
+        tick.close = bTick['c']
+        tick.change = bTick['cng']
+        ticks.append(tick)
       
     self.onNewTicks(ticks)
 
@@ -86,10 +97,10 @@ class AngelOneTicker(BaseTicker):
     self.onConnect()
 
   def on_close(self, ws):
-    self.onDisconnect(0, "Closing.")
+    self.onDisconnect(0, "disconnected")
 
   def on_error(self, ws, error):
-    self.onError(0, error)
+    self.onError(0, "error")
 
   def on_reconnect(self, ws, attemptsCount):
     self.onReconnect(attemptsCount)

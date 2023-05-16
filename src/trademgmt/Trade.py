@@ -68,5 +68,5 @@ class Trade:
       + ", productType=" + self.productType + ", reqEntry=" + str(self.requestedEntry) \
       + ", stopLoss=" + str(self.stopLoss) + ", target=" + str(self.target) \
       + ", entry=" + str(self.entry) + ", exit=" + str(self.exit) \
-      + ", profitLoss" + str(self.pnl)
+      + ", profitLoss=" + str(self.pnl)
 
