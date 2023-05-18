@@ -1,6 +1,7 @@
 import os
 import logging
 import json
+import urllib.request
 
 from config.Config import getServerConfig, getTimestampsData, saveTimestampsData
 from core.Controller import Controller
@@ -56,12 +57,19 @@ class Instruments:
   def fetchInstrumentsFromServer():
     instrumentsList = []
     try:
-      brokerHandle = Controller.getBrokerLogin().getBrokerHandle()
-      logging.info('Going to fetch instruments from server...')
-      instrumentsList = brokerHandle.instruments('NSE')
-      instrumentsListFnO = brokerHandle.instruments('NFO')
-      # Add FnO instrument list to the main list
-      instrumentsList.extend(instrumentsListFnO)
+      brokerName = Controller.getBrokerName()
+      logging.info('Going to fetch instruments from server for [%s]...',brokerName)
+      if brokerName == 'zerodha':
+        brokerHandle = Controller.getBrokerLogin().getBrokerHandle()
+        instrumentsList = brokerHandle.instruments('NSE')
+        instrumentsListFnO = brokerHandle.instruments('NFO')
+        # Add FnO instrument list to the main list
+        instrumentsList.extend(instrumentsListFnO)
+      elif brokerName == 'angel':
+        instrument_url = "https://margincalculator.angelbroking.com/OpenAPI_File/files/OpenAPIScripMaster.json"
+        response = urllib.request.urlopen(instrument_url)
+        instrumentsList = json.loads(response.read())
+      
       logging.info('Fetched %d instruments from server.', len(instrumentsList))
     except Exception as e:
       logging.exception("Exception while fetching instruments from server")
