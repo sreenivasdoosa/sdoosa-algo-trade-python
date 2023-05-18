@@ -2,14 +2,14 @@ import logging
 import json
 
 from smartapi.webSocket import WebSocket
-from smartapi import SmartWebSocket
+from smartapi import SmartWebSocketV2
 
 from ticker.BaseTicker import BaseTicker
 from instruments.Instruments import Instruments
 from models.TickData import TickData
 
 class AngelOneTicker(BaseTicker):
-  EXCHANGE_MAPPING = {'NSE':'nse_cm','BSE':'bse_cm','NFO':'nse_fo','MCX':'mcx_fo','NCDEX':'nce_fo','CDS':'cde_fo'}
+  EXCHANGE_TYPE_MAPPING = {'NSE':1,'BSE':3,'NFO':2,'MCX':5,'NCDEX':7,'CDS':13}
   def __init__(self):
     super().__init__("angel")
 
@@ -20,77 +20,66 @@ class AngelOneTicker(BaseTicker):
       logging.error('AngelOneTicker startTicker: Cannot start ticker as feedToken is empty')
       return
     
-    ticker = SmartWebSocket(feedToken, brokerAppDetails.clientID)
-    ticker._on_open = self.on_connect
-    ticker._on_close = self.on_close
-    ticker._on_error = self.on_error
-    ticker._on_message = self.on_ticks
+    ticker = SmartWebSocketV2(brokerAppDetails.clientID,feedToken)
+    ticker.on_open = self.on_connect
+    ticker.on_close = self.on_close
+    ticker.on_error = self.on_error
+    ticker.on_data = self.on_ticks
     
-    #ticker = WebSocket(feedToken, brokerAppDetails.clientID,debug=True)
-    #ticker.on_connect = self.on_connect
-    #ticker.on_close = self.on_close
-    #ticker.on_error = self.on_error
-    #ticker.on_reconnect = self.on_reconnect
-    #ticker.on_noreconnect = self.on_noreconnect
-    #ticker.on_ticks = self.on_ticks
-
     logging.info('AngelOneTicker: Going to connect..')
     self.brokerAppDetails = brokerAppDetails
     self.ticker = ticker
     self.ticker.connect()
-    #self.ticker.connect(threaded=True,disable_ssl_verification=True)
 
   def stopTicker(self):
     logging.info('AngelOneTicker: stopping..')
-    self.ticker.close(1000, "Manual close")
+    self.ticker.close_connection()
 
   def registerSymbols(self, symbols):
-    tokens = []
+    exch_token_map = {'NSE':[],'NFO':[],'BSE':[],'MCX':[],'NCDEX':[],'CDS':[]}
     for symbol in symbols:
       isd = Instruments.getInstrumentDataBySymbol(symbol)
-      token = self._prepareMessageToken(isd)
-      logging.info('AngelOneTicker registerSymbol: %s token = %s', symbol, token)
-      tokens.append(token)
-
-    messageTokens = "&".join(f'"{s}"' for s in tokens)
+      exch_seg = isd['exch_seg']
+      instrumentToken = isd[self.brokerAppDetails.instrumentKeys.instrumentToken]
+      exch_token_map[exch_seg].append(instrumentToken)
+      logging.info('AngelOneTicker registerSymbol: %s token = %s', symbol, instrumentToken)
+      
+    messageTokens = self._prepareMessageTokens(exch_token_map)
     logging.info('AngelOneTicker Subscribing token %s', messageTokens)
-    self.ticker.subscribe('mw',messageTokens)
-    #self.ticker.send_request(messageTokens,'mw')
-
+    self.ticker.subscribe('zeel_123_free',3,messageTokens)
+    
   def unregisterSymbols(self, symbols):
-    tokens = []
+    exch_token_map = {'NSE':[],'NFO':[],'BSE':[],'MCX':[],'NCDEX':[],'CDS':[]}
     for symbol in symbols:
       isd = Instruments.getInstrumentDataBySymbol(symbol)
-      token = self._prepareMessageToken(isd)
-      logging.info('AngelOneTicker unregisterSymbols: %s token = %s', symbol, token)
-      tokens.append(token)
-
-    messageTokens = "&".join(f'"{s}"' for s in tokens)
-    logging.info('AngelOneTicker Unsubscribing tokens %s', messageTokens)
-    self.ticker.subscribe('mw',messageTokens)
-    #self.ticker.send_request(messageTokens,'mw')
-
-  def on_ticks(self, ws, brokerTicks):
-    logging.info('on_ticks message = %s', brokerTicks)
+      exch_seg = isd['exch_seg']
+      instrumentToken = isd[self.brokerAppDetails.instrumentKeys.instrumentToken]
+      exch_token_map[exch_seg].append(instrumentToken)
+      logging.info('AngelOneTicker unregisterSymbol: %s token = %s', symbol, instrumentToken)
+      
+    messageTokens = self._prepareMessageTokens(exch_token_map)
+    logging.info('AngelOneTicker Unsubscribing token %s', messageTokens)
+    self.ticker.unsubscribe('zeel_123_free',3,messageTokens)
+    
+  def on_ticks(self, ws, bTick):
+    logging.info('on_ticks message = %s', bTick)
     # convert broker specific Ticks to our system specific Ticks (models.TickData) and pass to super class function
     ticks = []
-    for bTick in brokerTicks:
-      if 'ts' in bTick:
-        tradingSymbol = bTick['ts']
-        tick = TickData(tradingSymbol)
-        tick.lastTradedPrice = bTick['ltp']
-        tick.lastTradedQuantity = bTick['ltq']
-        tick.avgTradedPrice = bTick['ap']
-        tick.volume = bTick['v']
-        tick.totalBuyQuantity = bTick['tbq']
-        tick.totalSellQuantity = bTick['tsq']
-        tick.open = bTick['op']
-        tick.high = bTick['h']
-        tick.low = bTick['lo']
-        tick.close = bTick['c']
-        tick.change = bTick['cng']
-        ticks.append(tick)
-      
+    isd = Instruments.getInstrumentDataByToken(bTick['token'])
+    tradingSymbol = isd[self.brokerAppDetails.instrumentKeys.tradingSymbol]
+    tick = TickData(tradingSymbol)
+    tick.lastTradedPrice = bTick['last_traded_price']
+    tick.lastTradedQuantity = bTick['last_traded_quantity']
+    tick.avgTradedPrice = bTick['average_traded_price']
+    tick.volume = bTick['volume_trade_for_the_day']
+    tick.totalBuyQuantity = bTick['total_buy_quantity']
+    tick.totalSellQuantity = bTick['total_sell_quantity']
+    tick.open = bTick['open_price_of_the_day']
+    tick.high = bTick['high_price_of_the_day']
+    tick.low = bTick['low_price_of_the_day']
+    tick.close = bTick['closed_price']
+    #tick.change = bTick['cng']
+    ticks.append(tick)
     self.onNewTicks(ticks)
 
   def on_connect(self, ws):
@@ -111,8 +100,10 @@ class AngelOneTicker(BaseTicker):
   def on_order_update(self, ws, data):
     self.onOrderUpdate(data)
 
-  def _prepareMessageToken(self, instrument):
-    return self._getExchangeMapping(instrument['exch_seg'])+"|"+instrument[self.brokerAppDetails.instrumentKeys.instrumentToken]
-
-  def _getExchangeMapping(self, exchange):
-    return self.EXCHANGE_MAPPING[exchange]
+  def _prepareMessageTokens(self, exch_token_map):
+    tokens = []
+    for key, value in exch_token_map.items():
+      if len(value)>0:
+        token = { "exchangeType": self.EXCHANGE_TYPE_MAPPING[key], "tokens": value}
+        tokens.append(token)
+    return tokens
