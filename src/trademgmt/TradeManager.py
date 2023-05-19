@@ -447,7 +447,8 @@ class TradeManager:
     brokerName = Controller.getBrokerName()
     if brokerName == "zerodha":
       orderManager = ZerodhaOrderManager()
-    #elif brokerName == "fyers": # Not implemented
+    elif brokerName == "angel":
+      orderManager = AngetOneOrderManager()
     return orderManager
 
   @staticmethod
