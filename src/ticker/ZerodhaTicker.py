@@ -8,14 +8,14 @@ from instruments.Instruments import Instruments
 from models.TickData import TickData
 
 class ZerodhaTicker(BaseTicker):
-  def __init__(self):
-    super().__init__("zerodha")
+  def __init__(self,context):
+    super().__init__("zerodha",context)
 
   def startTicker(self):
     brokerAppDetails = self.brokerLogin.getBrokerAppDetails()
     accessToken = self.brokerLogin.getAccessToken()
     if accessToken == None:
-      logging.error('ZerodhaTicker startTicker: Cannot start ticker as accessToken is empty')
+      logging.error('[%s] ZerodhaTicker startTicker: Cannot start ticker as accessToken is empty', self.context)
       return
     
     ticker = KiteTicker(brokerAppDetails.appKey, accessToken)
@@ -27,12 +27,12 @@ class ZerodhaTicker(BaseTicker):
     ticker.on_ticks = self.on_ticks
     ticker.on_order_update = self.on_order_update
 
-    logging.info('ZerodhaTicker: Going to connect..')
+    logging.info('[%s] ZerodhaTicker: Going to connect..', self.context)
     self.ticker = ticker
     self.ticker.connect(threaded=True)
 
   def stopTicker(self):
-    logging.info('ZerodhaTicker: stopping..')
+    logging.info('[%s] ZerodhaTicker: stopping..', self.context)
     self.ticker.close(1000, "Manual close")
 
   def registerSymbols(self, symbols):
@@ -40,10 +40,10 @@ class ZerodhaTicker(BaseTicker):
     for symbol in symbols:
       isd = Instruments.getInstrumentDataBySymbol(symbol)
       token = isd['instrument_token']
-      logging.info('ZerodhaTicker registerSymbol: %s token = %s', symbol, token)
+      logging.info('[%s] ZerodhaTicker registerSymbol: %s token = %s', self.context, symbol, token)
       tokens.append(token)
 
-    logging.info('ZerodhaTicker Subscribing tokens %s', tokens)
+    logging.info('[%s] ZerodhaTicker Subscribing tokens %s', self.context, tokens)
     self.ticker.subscribe(tokens)
 
   def unregisterSymbols(self, symbols):
@@ -51,10 +51,10 @@ class ZerodhaTicker(BaseTicker):
     for symbol in symbols:
       isd = Instruments.getInstrumentDataBySymbol(symbol)
       token = isd['instrument_token']
-      logging.info('ZerodhaTicker unregisterSymbols: %s token = %s', symbol, token)
+      logging.info('[%s] ZerodhaTicker unregisterSymbols: %s token = %s', self.context, symbol, token)
       tokens.append(token)
 
-    logging.info('ZerodhaTicker Unsubscribing tokens %s', tokens)
+    logging.info('[%s] ZerodhaTicker Unsubscribing tokens %s', self.context, tokens)
     self.ticker.unsubscribe(tokens)
 
   def on_ticks(self, ws, brokerTicks):

@@ -13,6 +13,7 @@ from trademgmt.TradeState import TradeState
 from trademgmt.TradeExitReason import TradeExitReason
 from trademgmt.TradeEncoder import TradeEncoder
 from ordermgmt.ZerodhaOrderManager import ZerodhaOrderManager
+from ordermgmt.AngelOneOrderManager import AngelOneOrderManager
 from ordermgmt.OrderInputParams import OrderInputParams
 from ordermgmt.OrderModifyParams import OrderModifyParams
 from ordermgmt.Order import Order
@@ -31,7 +32,7 @@ class TradeManager:
   registeredSymbols = []
 
   @staticmethod
-  def run():
+  def run(sleepSeconds):
     if Utils.isTodayHoliday():
       logging.info("Cannot start TradeManager as Today is Trading Holiday.")
       return
@@ -41,6 +42,8 @@ class TradeManager:
       return
 
     Utils.waitTillMarketOpens("TradeManager")
+
+    time.sleep(sleepSeconds)
 
     # check and create trades directory for today`s date
     serverConfig = getServerConfig()
@@ -53,15 +56,15 @@ class TradeManager:
     # start ticker service
     brokerName = Controller.getBrokerName()
     if brokerName == "zerodha":
-      TradeManager.ticker = ZerodhaTicker()
+      TradeManager.ticker = ZerodhaTicker("TradeManager")
     elif brokerName == "angel":
-      TradeManager.ticker = AngelOneTicker()
+      TradeManager.ticker = AngelOneTicker("TradeManager")
 
-    TradeManager.ticker.startTicker()
     TradeManager.ticker.registerListener(TradeManager.tickerListener)
-
-    # sleep for 2 seconds for ticker connection establishment
-    time.sleep(2)
+    TradeManager.ticker.startTicker()
+    
+    # sleep for 5 seconds for ticker connection establishment
+    time.sleep(5)
 
     # Load all trades from json files to app memory
     TradeManager.loadAllTradesFromFile()
@@ -146,7 +149,7 @@ class TradeManager:
 
   @staticmethod
   def tickerListener(tick):
-    # logging.info('tickerLister: new tick received for %s = %f', tick.tradingSymbol, tick.lastTradedPrice);
+    # logging.info('tickerLister: new tick received for %s = %f', tick.tradingSymbol, tick.lastTradedPrice)
     TradeManager.symbolToCMPMap[tick.tradingSymbol] = tick.lastTradedPrice # Store the latest tick in map
     # On each new tick, get a created trade and call its strategy whether to place trade or not
     for strategy in TradeManager.strategyToInstanceMap:
@@ -448,7 +451,7 @@ class TradeManager:
     if brokerName == "zerodha":
       orderManager = ZerodhaOrderManager()
     elif brokerName == "angel":
-      orderManager = AngetOneOrderManager()
+      orderManager = AngelOneOrderManager()
     return orderManager
 
   @staticmethod

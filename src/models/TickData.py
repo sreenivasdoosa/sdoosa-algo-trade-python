@@ -2,6 +2,7 @@
 class TickData:
   def __init__(self, tradingSymbol):
     self.tradingSymbol = tradingSymbol
+    self.timestamp = None
     self.lastTradedPrice = 0
     self.lastTradedQuantity = 0
     self.avgTradedPrice = 0
@@ -13,3 +14,4 @@ class TickData:
     self.low = 0
     self.close = 0
     self.change = 0
+    self.oi=0

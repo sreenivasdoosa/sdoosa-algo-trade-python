@@ -4,6 +4,7 @@ import time
 
 from instruments.Instruments import Instruments
 from trademgmt.TradeManager import TradeManager
+from datamgmt.DataManager import DataManager
 
 from strategies.SampleStrategy import SampleStrategy
 from strategies.BNFORB30Min import BNFORB30Min
@@ -24,8 +25,14 @@ class Algo:
     logging.info("Starting Algo...")
     Instruments.fetchInstruments()
 
+    #dm = threading.Thread(target=DataManager.run,args=(1,))
+    #dm.start()
+
+    # sleep for 2 seconds for DataManager to get initialized
+    #time.sleep(2)
+
     # start trade manager in a separate thread
-    tm = threading.Thread(target=TradeManager.run)
+    tm = threading.Thread(target=TradeManager.run,args=(5,))
     tm.start()
 
     # sleep for 2 seconds for TradeManager to get initialized

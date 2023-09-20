@@ -3,7 +3,7 @@ import uuid
 import time
 import logging
 import calendar
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from config.Config import getHolidays
 from models.Direction import Direction
@@ -60,6 +60,10 @@ class Utils:
     epochSeconds = datetime.timestamp(datetimeObj)
     return int(epochSeconds) # converting double to long
 
+  @staticmethod
+  def getDateTime(epochSeconds):
+    datetimeObj=datetime.fromtimestamp(epochSeconds,timezone.utc).strftime(Utils.dateTimeFormat)
+    return datetimeObj
   @staticmethod
   def getMarketStartTime(dateTimeObj = None):
     return Utils.getTimeOfDay(9, 15, 0, dateTimeObj)

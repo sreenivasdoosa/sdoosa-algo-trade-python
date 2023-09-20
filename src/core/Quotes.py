@@ -35,27 +35,29 @@ class Quotes:
       quote.upperCircuitLimit = bQuote['upper_circuit_limit']
     elif broker == "angel":
       isd = Instruments.getInstrumentDataBySymbol(tradingSymbol)
+      #exchangeTokens = { 'NFO' : [ isd['token'] ]} if isFnO == True else { 'NSE' : [ isd['token'] ]}
+      #bQuoteResp = brokerHandle.getMarketData('FULL',exchangeTokens) 
+      #bQuote = bQuoteResp['data']['fetched'][0]
       bQuoteResp = brokerHandle.ltpData(isd['exch_seg'],tradingSymbol,isd['token']) 
       bQuote = bQuoteResp['data']
       # convert broker quote to our system quote
       quote = Quote(tradingSymbol)
       quote.tradingSymbol = tradingSymbol
       quote.lastTradedPrice = bQuote['ltp']
-      #quote.lastTradedQuantity = bQuote['last_quantity']
-      #quote.avgTradedPrice = bQuote['average_price']
-      #quote.volume = bQuote['volume']
-      #quote.totalBuyQuantity = bQuote['buy_quantity']
-      #quote.totalSellQuantity = bQuote['sell_quantity']
-      #ohlc = bQuote['ohlc']
+      #quote.lastTradedQuantity = bQuote['lastTradeQty']
+      #quote.avgTradedPrice = bQuote['avgPrice']
+      #quote.volume = bQuote['tradeVolume']
+      #quote.totalBuyQuantity = bQuote['totBuyQuan']
+      #quote.totalSellQuantity = bQuote['totSellQuan']
       quote.open = bQuote['open']
       quote.high = bQuote['high']
       quote.low = bQuote['low']
       quote.close = bQuote['close']
-      #quote.change = bQuote['net_change']
+      #quote.change = bQuote['netChange']
       #quote.oiDayHigh = bQuote['oi_day_high']
       #quote.oiDayLow = bQuote['oi_day_low']
-      #quote.lowerCiruitLimit = bQuote['lower_circuit_limit']
-      #quote.upperCircuitLimit = bQuote['upper_circuit_limit']
+      #quote.lowerCiruitLimit = bQuote['lowerCircuit']
+      #quote.upperCircuitLimit = bQuote['upperCircuit']
     return quote
 
   @staticmethod

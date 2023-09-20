@@ -1,8 +1,8 @@
 import logging
 import json
 
-from smartapi.webSocket import WebSocket
-from smartapi import SmartWebSocketV2
+from SmartApi.webSocket import WebSocket
+from SmartApi import SmartWebSocketV2
 
 from ticker.BaseTicker import BaseTicker
 from instruments.Instruments import Instruments
@@ -10,29 +10,34 @@ from models.TickData import TickData
 
 class AngelOneTicker(BaseTicker):
   EXCHANGE_TYPE_MAPPING = {'NSE':1,'BSE':3,'NFO':2,'MCX':5,'NCDEX':7,'CDS':13}
-  def __init__(self):
-    super().__init__("angel")
+  def __init__(self,context):
+    super().__init__("angel",context)
 
+  #This is a blocking method call because SmartWebSocketV2.connect() is blocking.
+  #So there should not be any statements after this method is called as it would not be called until the control from thcker.connect() method is returned.
   def startTicker(self):
     brokerAppDetails = self.brokerLogin.getBrokerAppDetails()
+    accessToken = self.brokerLogin.getBrokerHandle().access_token
     feedToken = self.brokerLogin.getBrokerHandle().feed_token
     if feedToken == None:
-      logging.error('AngelOneTicker startTicker: Cannot start ticker as feedToken is empty')
+      logging.error('[%s] AngelOneTicker startTicker: Cannot start ticker as feedToken is empty', self.context)
       return
     
-    ticker = SmartWebSocketV2(brokerAppDetails.clientID,feedToken)
+    ticker = SmartWebSocketV2(accessToken,brokerAppDetails.appKey,brokerAppDetails.clientID,feedToken)
     ticker.on_open = self.on_connect
     ticker.on_close = self.on_close
     ticker.on_error = self.on_error
     ticker.on_data = self.on_ticks
     
-    logging.info('AngelOneTicker: Going to connect..')
+    logging.info('[%s] AngelOneTicker: Going to connect..', self.context)
     self.brokerAppDetails = brokerAppDetails
     self.ticker = ticker
+    #This is a blocking method call. The control doesn't come back until the connection breaks.
+    #ALl the communications happen after this is event driven and are captured on callbacks defined above.
     self.ticker.connect()
 
   def stopTicker(self):
-    logging.info('AngelOneTicker: stopping..')
+    logging.info('[%s] AngelOneTicker: stopping..', self.context)
     self.ticker.close_connection()
 
   def registerSymbols(self, symbols):
@@ -42,11 +47,11 @@ class AngelOneTicker(BaseTicker):
       exch_seg = isd['exch_seg']
       instrumentToken = isd[self.brokerAppDetails.instrumentKeys.instrumentToken]
       exch_token_map[exch_seg].append(instrumentToken)
-      logging.info('AngelOneTicker registerSymbol: %s token = %s', symbol, instrumentToken)
+      logging.info('[%s] AngelOneTicker registerSymbol: %s token = %s', self.context, symbol, instrumentToken)
       
     messageTokens = self._prepareMessageTokens(exch_token_map)
-    logging.info('AngelOneTicker Subscribing token %s', messageTokens)
-    self.ticker.subscribe('zeel_123_free',3,messageTokens)
+    logging.info('[%s] AngelOneTicker Subscribing token %s', self.context, messageTokens)
+    self.ticker.subscribe(self.context,3,messageTokens)
     
   def unregisterSymbols(self, symbols):
     exch_token_map = {'NSE':[],'NFO':[],'BSE':[],'MCX':[],'NCDEX':[],'CDS':[]}
@@ -55,11 +60,11 @@ class AngelOneTicker(BaseTicker):
       exch_seg = isd['exch_seg']
       instrumentToken = isd[self.brokerAppDetails.instrumentKeys.instrumentToken]
       exch_token_map[exch_seg].append(instrumentToken)
-      logging.info('AngelOneTicker unregisterSymbol: %s token = %s', symbol, instrumentToken)
+      logging.info('[%s] AngelOneTicker unregisterSymbol: %s token = %s', self.context, symbol, instrumentToken)
       
     messageTokens = self._prepareMessageTokens(exch_token_map)
-    logging.info('AngelOneTicker Unsubscribing token %s', messageTokens)
-    self.ticker.unsubscribe('zeel_123_free',3,messageTokens)
+    logging.info('[%s] AngelOneTicker Unsubscribing token %s', self.context, messageTokens)
+    self.ticker.unsubscribe(self.context,3,messageTokens)
     
   def on_ticks(self, ws, bTick):
     logging.info('on_ticks message = %s', bTick)
@@ -78,6 +83,8 @@ class AngelOneTicker(BaseTicker):
     tick.high = bTick['high_price_of_the_day']
     tick.low = bTick['low_price_of_the_day']
     tick.close = bTick['closed_price']
+    tick.oi=bTick['open_interest']
+    tick.timestamp=bTick['exchange_timestamp']
     #tick.change = bTick['cng']
     ticks.append(tick)
     self.onNewTicks(ticks)

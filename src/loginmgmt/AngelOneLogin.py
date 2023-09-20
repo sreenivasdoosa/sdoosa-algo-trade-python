@@ -1,5 +1,5 @@
 import logging
-from smartapi import SmartConnect
+from SmartApi import SmartConnect
 
 from config.Config import getSystemConfig
 from loginmgmt.BaseLogin import BaseLogin
